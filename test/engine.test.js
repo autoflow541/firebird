@@ -155,17 +155,32 @@ test("losing the interlock disarms the laser", () => {
   assert.strictEqual(s.laser.armed, false, "laser stayed armed after interlock dropped");
 });
 
-test("sound source drives visuals only — never blackout or laser", () => {
+test("sound drives visuals + modulates an ARMED laser, but never arms it or blacks out", () => {
   const s = engine.initialState();
-  s.laser.enabled = true; s.laser.interlock = true; s.laser.output = "dmx";
+  s.laser.enabled = true; s.laser.requireInterlock = false; s.laser.output = "dmx";
   // Sound CAN drive a visual.
   engine.applyCommand(s, { action: "visual", key: "brightness", value: 70, source: "sound" }, cfg);
   assert.strictEqual(s.blaize.brightness, 70, "sound could not drive a visual");
-  // Sound CANNOT engage blackout, and CANNOT arm the laser.
+  // Sound CANNOT engage blackout, arm the laser, or change its output.
   engine.applyCommand(s, { action: "blackout", value: true, source: "sound" }, cfg);
   assert.strictEqual(s.blackout, false, "sound engaged blackout");
   engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "sound" }, cfg);
   assert.strictEqual(s.laser.armed, false, "sound armed the laser");
+  engine.applyCommand(s, { action: "laser", key: "output", value: "ilda", source: "sound" }, cfg);
+  assert.strictEqual(s.laser.output, "dmx", "sound changed the laser output");
+  // laser fx from sound is IGNORED while not armed (can't move a beam that's off).
+  engine.applyCommand(s, { action: "laser", key: "fx", value: 90, source: "sound" }, cfg);
+  assert.strictEqual(s.laser.fx, 0, "sound moved the laser while it was not armed");
+  // Operator arms; NOW sound moves the beam, always.
+  engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "local" }, cfg);
+  engine.applyCommand(s, { action: "laser", key: "fx", value: 90, source: "sound" }, cfg);
+  assert.strictEqual(s.laser.fx, 90, "sound could not move the armed laser");
+  assert.strictEqual(engine.deriveOutputs(s).laser.fx, 90, "armed laser fx not in output");
+  // Blackout zeroes the fx and the beam.
+  engine.applyCommand(s, { action: "blackout", value: true, source: "local" }, cfg);
+  const out = engine.deriveOutputs(s);
+  assert.strictEqual(out.laser.emit, false, "blackout did not kill the beam");
+  assert.strictEqual(out.laser.fx, 0, "blackout did not zero laser fx");
 });
 
 test("Ableton clock: internal timeline does not free-run", () => {

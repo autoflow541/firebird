@@ -33,6 +33,9 @@
       cmds.push({ action: "depthfx", key: "colorspeed", value: +(amp(f.high) * 5).toFixed(2) });
       cmds.push({ action: "depthfx", key: "trails", value: +(0.7 + amp(f.level) * 0.29).toFixed(2) });
     }
+    // Laser modulation ("always" on): the engine applies this ONLY when the laser
+    // is armed, so it moves an armed beam but can never arm it or beat a blackout.
+    if (c.laser !== false) cmds.push({ action: "laser", key: "fx", value: pct(amp(f.level)) });
     return cmds;
   }
 

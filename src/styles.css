@@ -71,6 +71,8 @@ body.remote { padding:18px;max-width:520px;margin:auto;background:radial-gradien
 .laser-output{ display:flex; gap:6px; }
 .laser-output button{ border:1px solid #34353e; background:#17181e; color:#c9cad3; font-size:11px; font-weight:800; letter-spacing:.12em; padding:11px 18px; }
 .laser-output button.active{ border-color:var(--af-gold); color:#141414; background:var(--af-gold); }
+.laser-output-label{ display:flex; align-items:center; gap:9px; font-size:8px; letter-spacing:.16em; color:#7d7f88; }
+.laser-output-select{ background:#17181e; color:#f0d27a; border:1px solid #5a4718; font-size:12px; font-weight:800; letter-spacing:.08em; padding:10px 14px; }
 .laser-status{ display:flex; gap:20px; font-size:8px; letter-spacing:.14em; color:#777986; }
 .laser-status b{ color:#d7d3ca; font-family:Consolas,monospace; font-size:11px; margin-left:6px; }
 .laser-arm{ margin-left:auto; border:1px solid #642335; background:#1e0d12; color:var(--red); font-size:13px; font-weight:900; letter-spacing:.1em; padding:12px 22px; }
@@ -90,3 +92,19 @@ body.remote { padding:18px;max-width:520px;margin:auto;background:radial-gradien
 .stream-source span{ font-size:8px; letter-spacing:.16em; color:#696b76; }
 .stream-source code{ font:11px Consolas,monospace; color:var(--af-gold); background:#0b0c10; border:1px solid #262730; padding:9px 11px; word-break:break-all; }
 .stream-source small{ font-size:8px; color:#777986; letter-spacing:.04em; }
+
+/* Sound-reactive panel */
+.sound-panel{ margin-bottom:12px; }
+.sound-toggle{ font-size:9px; letter-spacing:.16em; font-weight:800; padding:8px 14px; border:1px solid #34353e; background:#17181e; color:var(--muted); }
+.sound-toggle.active{ color:#141414; background:var(--af-gold); border-color:var(--af-gold); }
+.sound-controls{ display:flex; gap:18px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.sound-controls label{ font-size:8px; letter-spacing:.14em; color:#7d7f88; display:flex; align-items:center; gap:8px; }
+.sound-controls select{ background:#17181e; color:#c9cad3; border:1px solid #34353e; font-size:11px; padding:7px 9px; }
+.sound-controls input[type=range]{ accent-color:var(--af-gold); }
+.sound-controls .chk{ text-transform:uppercase; }
+.sound-meters{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.sound-meters>div{ display:flex; flex-direction:column; gap:6px; }
+.sound-meters span{ font-size:8px; letter-spacing:.16em; color:#696b76; }
+.sound-meters em{ display:block; height:8px; background:#0b0c10; border:1px solid #262730; overflow:hidden; }
+.sound-meters i{ display:block; height:100%; width:0; background:linear-gradient(90deg,var(--af-gold),#f0d27a); transition:width .06s linear; }
+.sound-note{ margin:14px 0 0; color:#777986; font-size:9px; line-height:1.5; }

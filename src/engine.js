@@ -69,7 +69,9 @@ function initialState() {
       // signal to arm. Set false when the laser's own KEY is the hardware guard
       // (config LASER_REQUIRE_INTERLOCK). Either way blackout kills the beam and
       // only the local operator can arm.
-      enabled: false, interlock: false, armed: false, output: "none", requireInterlock: true
+      // fx: 0..100 sound/operator modulation of an ARMED beam (intensity/energy).
+      // Applies only when armed; blackout (which disarms) forces it to 0.
+      enabled: false, interlock: false, armed: false, output: "none", requireInterlock: true, fx: 0
     },
     fixtures: [
       { id: "washL", name: "Wash L", type: "RGBW", level: 76, color: "#ec325d" },
@@ -110,9 +112,15 @@ function applyCommand(state, cmd, config) {
   const source = cmd.source || "local";
   const log = [];
 
-  if (source === "sound" && !SOUND_ALLOWED.has(cmd.action)) {
-    log.push(`blocked '${cmd.action}' from source 'sound' (sound drives visuals only)`);
-    return log;
+  if (source === "sound") {
+    // Sound may drive visuals/master/depthfx, and may MODULATE an armed laser
+    // (key "fx" only). It can never arm the laser, change its output/interlock,
+    // or engage blackout — those stay human + hardware.
+    const okLaserFx = cmd.action === "laser" && cmd.key === "fx";
+    if (!SOUND_ALLOWED.has(cmd.action) && !okLaserFx) {
+      log.push(`blocked '${cmd.action}' from source 'sound' (not permitted for sound)`);
+      return log;
+    }
   }
 
   switch (cmd.action) {
@@ -205,13 +213,18 @@ function applyCommand(state, cmd, config) {
       if (cmd.key === "interlock") {
         state.laser.interlock = Boolean(cmd.value); // set by the hardware bridge
         if (!state.laser.interlock) state.laser.armed = false;
+      } else if (cmd.key === "fx") {
+        // Modulate the beam's intensity/energy. Only meaningful while ARMED, so
+        // sound/operator can move the laser but never turn it on from off, and a
+        // blackout (which disarms) stops the modulation too.
+        if (state.laser.armed) state.laser.fx = clamp(Number(cmd.value), 0, 100);
       } else if (cmd.key === "output") {
         // Selecting the transport (ILDA/DMX/OFF) is local-only and always
         // DISARMS first — you never hot-swap the output path on a live beam.
         const mode = String(cmd.value);
         if (source !== "local") {
           log.push(`blocked laser output change from '${source}' (local operator only)`);
-        } else if (["none", "dmx", "ilda"].includes(mode)) {
+        } else if (["none", "dmx", "ilda", "shownet"].includes(mode)) {
           state.laser.armed = false;
           state.laser.output = mode;
         }
@@ -291,12 +304,13 @@ function deriveOutputs(state) {
     // Laser output. `emit` is the ONLY thing that may energize a beam, and it is
     // false unless the software switch, hardware interlock, an armed operator, a
     // selected transport, and NO blackout all line up. `output` picks the wire.
-    laser: {
-      emit: !blackout && state.laser.enabled && state.laser.armed &&
-            state.laser.output !== "none" &&
-            (!state.laser.requireInterlock || state.laser.interlock),
-      output: state.laser.output
-    }
+    laser: (() => {
+      const emit = !blackout && state.laser.enabled && state.laser.armed &&
+        state.laser.output !== "none" &&
+        (!state.laser.requireInterlock || state.laser.interlock);
+      // fx only leaves the gate when actually emitting — blackout/disarm -> 0.
+      return { emit, output: state.laser.output, fx: emit ? state.laser.fx : 0 };
+    })()
   };
 }
 

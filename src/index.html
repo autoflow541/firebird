@@ -88,11 +88,14 @@
     <section class="panel laser-panel">
       <div class="panel-head"><div><span>LASER</span><b>Safety-gated output</b></div><div id="laserState" class="laser-state">DISABLED</div></div>
       <div class="laser-controls">
-        <div class="laser-output" role="group" aria-label="Laser output transport">
-          <button data-laser-output="none" class="active">OFF</button>
-          <button data-laser-output="ilda">ILDA</button>
-          <button data-laser-output="dmx">DMX</button>
-        </div>
+        <label class="laser-output-label">OUTPUT
+          <select id="laserOutputSelect" class="laser-output-select">
+            <option value="none">OFF</option>
+            <option value="dmx">DMX</option>
+            <option value="ilda">ILDA</option>
+            <option value="shownet">ShowNET</option>
+          </select>
+        </label>
         <div class="laser-status"><span>INTERLOCK <b id="laserInterlock">—</b></span><span>OUTPUT <b id="laserOutput">OFF</b></span></div>
         <button id="laserArm" class="laser-arm" disabled>ARM LASER</button>
       </div>
@@ -109,7 +112,25 @@
       </div>
       <div class="stream-source"><span>OBS BROWSER SOURCE</span><code id="streamUrl">…</code><small>Add &amp;bg=1 for a full moving background.</small></div>
     </section>
+
+    <section class="panel sound-panel">
+      <div class="panel-head"><div><span>SOUND</span><b>Audio-reactive visuals</b></div><button id="soundToggle" class="sound-toggle">SOUND OFF</button></div>
+      <div class="sound-controls">
+        <label>INPUT <select id="soundDevice"><option value="">Default input</option></select></label>
+        <label>SENSITIVITY <input id="soundSens" type="range" min="25" max="300" value="100"></label>
+        <label class="chk"><input type="checkbox" id="soundMaster"> Drive master</label>
+        <label class="chk"><input type="checkbox" id="soundDepth"> Drive depth-FX</label>
+      </div>
+      <div class="sound-meters">
+        <div><span>BASS</span><em><i id="mBass"></i></em></div>
+        <div><span>MID</span><em><i id="mMid"></i></em></div>
+        <div><span>HIGH</span><em><i id="mHigh"></i></em></div>
+        <div><span>LEVEL</span><em><i id="mLevel"></i></em></div>
+      </div>
+      <p class="sound-note">Reacts the visuals to the music — Blaize, depth-FX, master. Sound drives visuals only; never blackout or the laser.</p>
+    </section>
   </main>
+  <script src="soundmap.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

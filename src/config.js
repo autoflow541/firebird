@@ -88,6 +88,9 @@ const defaults = {
   ARTNET_UNIVERSE: 0,
   LASER_DMX_ADDRESS: 1,
   LASER_DMX_ARMED: [255, 255],
+  // Sound-driven intensity channel (1-based; 0 = unset). Set to the DS-1000RGB
+  // dimmer/intensity channel from its DMX chart so sound modulates the beam.
+  LASER_DMX_INTENSITY_CH: 0,
 
   // ILDA: Firebird cannot emit analog ILDA directly — it forwards arm/blank to an
   // ILDA DAC or laser software (Ether Dream / Helios / Pangolin Beyond, …) over

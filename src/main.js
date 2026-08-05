@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, session } = require("electron");
 const http = require("http");
 const os = require("os");
 const path = require("path");
@@ -34,7 +34,7 @@ state.ableton.port = config.OSC_PORT;
 state.ableton.feedbackPort = config.OSC_FEEDBACK_PORT;
 state.laser.enabled = config.LASER_ENABLED;
 state.laser.requireInterlock = config.LASER_REQUIRE_INTERLOCK;
-state.laser.output = ["none", "dmx", "ilda"].includes(config.LASER_OUTPUT) ? config.LASER_OUTPUT : "none";
+state.laser.output = ["none", "dmx", "ilda", "shownet"].includes(config.LASER_OUTPUT) ? config.LASER_OUTPUT : "none";
 
 let artnetSocket; // created at boot for the DMX laser transport
 
@@ -168,13 +168,13 @@ function pushOutputs() {
 // dropped packet self-heals.
 // ---------------------------------------------------------------------------
 function sendLaser(laser) {
-  // Always keep DMX safe if that transport is (or was) selected; only the chosen
-  // transport goes active. ILDA is a bridge-forward; when idle we forward blank.
-  if (laser.output === "dmx") sendArtNetLaser(laser.emit);
-  else sendArtNetLaser(false); // ensure any DMX laser is held blanked when not selected
-
-  if (laser.output === "ilda") sendIldaBridge(laser.emit);
-  else sendIldaBridge(false);
+  // Only the chosen transport goes active; the others are held safe (blanked/zero)
+  // so a previously-armed transport can't stay lit. ILDA and ShowNET both drive an
+  // external DAC / laser software (Showeditor / Beyond) via the bridge — Firebird
+  // stays the arm + blackout master while that software renders the frames.
+  const dacActive = (laser.output === "ilda" || laser.output === "shownet") && laser.emit;
+  sendArtNetLaser(laser.output === "dmx" && laser.emit, laser.fx);
+  sendDacBridge(dacActive, laser.fx);
 }
 
 function artnetPacket(universe, data) {
@@ -189,7 +189,7 @@ function artnetPacket(universe, data) {
   return Buffer.concat([header, data]);
 }
 
-function sendArtNetLaser(emit) {
+function sendArtNetLaser(emit, fx) {
   if (!artnetSocket) return;
   const data = Buffer.alloc(512); // all zeros = blanked / shutter closed
   if (emit) {
@@ -197,17 +197,24 @@ function sendArtNetLaser(emit) {
     (config.LASER_DMX_ARMED || []).forEach((v, i) => {
       if (base + i < 512) data[base + i] = Number(v) & 255;
     });
+    // Sound-driven intensity on a configured channel (from the DS-1000RGB DMX
+    // chart). 0 = unset; wire once the chart's dimmer/intensity channel is known.
+    if (config.LASER_DMX_INTENSITY_CH > 0) {
+      data[config.LASER_DMX_INTENSITY_CH - 1] = Math.round(Math.max(0, Math.min(100, fx || 0)) / 100 * 255);
+    }
   }
   artnetSocket.send(artnetPacket(config.ARTNET_UNIVERSE, data), 6454, config.ARTNET_HOST, () => {});
 }
 
-function sendIldaBridge(emit) {
+// Drives an external ILDA DAC / laser software (Showeditor, Beyond) — used by both
+// the ILDA and ShowNET output modes. emit=1 permits output; blank=1 forces blank.
+function sendDacBridge(emit, fx) {
   if (!abletonOsc) return;
   const host = config.ILDA_BRIDGE_HOST;
   const port = config.ILDA_BRIDGE_PORT;
-  // emit=1 permits output; blank=1 forces the DAC to blank. Redundant on purpose.
   abletonOsc.send(makeOsc("/laser/emit", "i", emit ? 1 : 0), port, host, () => {});
   abletonOsc.send(makeOsc("/laser/blank", "i", emit ? 0 : 1), port, host, () => {});
+  abletonOsc.send(makeOsc("/laser/energy", "f", emit ? (fx || 0) / 100 : 0), port, host, () => {});
 }
 
 // On (re)connect to Blaize, flush the FULL desired state so the visual engine
@@ -533,6 +540,7 @@ ipcMain.on("mapping:set", (_, next) => {
   pushMapping();
 });
 ipcMain.handle("mapping:get", () => mapping);
+ipcMain.on("sound:command", (_, cmd) => dispatch({ ...cmd, source: "sound" }));
 ipcMain.on("obs:command", (_, cmd) => handleObs(cmd));
 ipcMain.handle("obs:get", () => obs.getStatus());
 ipcMain.handle("stream:get", () => streamUrl());
@@ -540,6 +548,8 @@ ipcMain.handle("capture", async () => { try { return await captureProjector(); }
 
 app.whenReady().then(() => {
   console.log(`\n  FIREBIRD control token: ${CONTROL_TOKEN}\n  Remote (LAN only): ${remoteUrl()}\n`);
+  // Allow the operator window to use the mic/line-in for the sound-reactive engine.
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "media"));
   createWindows();
   startControlServer();
   connectBlaize();

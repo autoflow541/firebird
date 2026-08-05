@@ -56,7 +56,8 @@ function renderLaser(laser) {
   stateEl.className = "laser-state" + (laser.armed ? " armed" : " ready");
   document.querySelector("#laserInterlock").textContent = !laser.requireInterlock ? "KEY (hardware)" : laser.interlock ? "PRESENT" : "ABSENT";
   document.querySelector("#laserOutput").textContent = laser.output.toUpperCase();
-  document.querySelectorAll("[data-laser-output]").forEach((b) => b.classList.toggle("active", b.dataset.laserOutput === laser.output));
+  const outSel = document.querySelector("#laserOutputSelect");
+  if (outSel && outSel.value !== laser.output) outSel.value = laser.output;
   const arm = document.querySelector("#laserArm");
   arm.textContent = laser.armed ? "DISARM LASER" : "ARM LASER";
   arm.classList.toggle("armed", laser.armed);
@@ -85,9 +86,8 @@ document.querySelector("#fixtureGrid").oninput = (event) => {
   if (event.target.dataset.fixture) command("fixture", { level: Number(event.target.value) }, { id: event.target.dataset.fixture });
 };
 document.querySelector("#timeline").onclick = (event) => command("seek", event.offsetX / event.currentTarget.clientWidth * 104);
-document.querySelector(".laser-output").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-laser-output]");
-  if (button) window.showControl.command({ action: "laser", key: "output", value: button.dataset.laserOutput });
+document.querySelector("#laserOutputSelect").addEventListener("change", (event) => {
+  window.showControl.command({ action: "laser", key: "output", value: event.target.value });
 });
 document.querySelector("#laserArm").onclick = () => window.showControl.command({ action: "laser", key: "arm", value: !(state.laser && state.laser.armed) });
 
