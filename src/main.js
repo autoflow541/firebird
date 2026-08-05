@@ -588,6 +588,16 @@ ipcMain.on("mapping:set", (_, next) => {
   pushMapping();
 });
 ipcMain.handle("mapping:get", () => mapping);
+ipcMain.on("ar:quad", (_, quad) => {
+  // Live body-tracking: drive every surface flagged track:true to the tracked
+  // quad and push to the projector. Not saved to disk (it's per-frame).
+  if (!quad || quad.length !== 4) return;
+  let changed = false;
+  for (const s of mapping.surfaces || []) {
+    if (s.track) { s.corners = quad.map((c) => ({ x: c.x, y: c.y })); changed = true; }
+  }
+  if (changed) pushMapping();
+});
 ipcMain.on("sound:command", (_, cmd) => dispatch({ ...cmd, source: "sound" }));
 ipcMain.on("obs:command", (_, cmd) => handleObs(cmd));
 ipcMain.handle("obs:get", () => obs.getStatus());

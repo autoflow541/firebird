@@ -54,6 +54,7 @@ function render() {
   document.querySelector("#source").value = sel ? sel.source : "solid";
   document.querySelector("#color").value = sel ? sel.color : "#D4A017";
   document.querySelector("#opacity").value = Math.round((sel ? (sel.opacity == null ? 1 : sel.opacity) : 1) * 100);
+  document.querySelector("#track").checked = !!(sel && sel.track);
 }
 
 function pointToNorm(ev) {
@@ -86,6 +87,7 @@ document.querySelector("#del").onclick = () => { if (selected >= 0) { surfaces.s
 document.querySelector("#source").onchange = (e) => { if (surfaces[selected]) { surfaces[selected].source = e.target.value; render(); } };
 document.querySelector("#color").oninput = (e) => { if (surfaces[selected]) { surfaces[selected].color = e.target.value; render(); } };
 document.querySelector("#opacity").oninput = (e) => { if (surfaces[selected]) { surfaces[selected].opacity = Number(e.target.value) / 100; render(); } };
+document.querySelector("#track").onchange = (e) => { if (surfaces[selected]) { surfaces[selected].track = e.target.checked; } };
 document.querySelector("#dup").onclick = () => {
   if (!surfaces[selected]) return;
   const clone = JSON.parse(JSON.stringify(surfaces[selected]));
