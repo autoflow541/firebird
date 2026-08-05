@@ -1,0 +1,20 @@
+{
+  "__comment": "Copy to firebird.config.json to override defaults. All keys optional. See src/config.js for the full list and safety notes. NEVER expose CONTROL_PORT or OSC_PORT to the public internet.",
+
+  "CONTROL_PORT": 42080,
+  "CONTROL_BIND": "0.0.0.0",
+
+  "OSC_BIND": "127.0.0.1",
+  "OSC_PORT": 42070,
+  "OSC_FEEDBACK_HOST": "127.0.0.1",
+  "OSC_FEEDBACK_PORT": 42071,
+
+  "CLOCK_SOURCE": "ableton",
+
+  "BLAIZE_HOST": "127.0.0.1",
+  "BLAIZE_PORT": 17017,
+
+  "LASER_ENABLED": false,
+  "ALLOW_OSC_BLACKOUT_RELEASE": false,
+  "ALLOW_REMOTE_BLACKOUT_RELEASE": false
+}

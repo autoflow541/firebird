@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firebird Show Control</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="console">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">F</span><div><b>FIREBIRD</b><small>AUTO-FLOW · SHOW CONTROL</small></div></div>
+    <div class="status"><span class="dot"></span> SYSTEM READY <span class="divider"></span> ART-NET <em>SIMULATED</em> <span class="divider"></span> ABLETON <em id="abletonTop">WAITING</em></div>
+    <div class="clock" id="clock">00:00:00</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">NOW PLAYING · <span id="songName">FIREBIRD</span></p>
+        <h1 id="sceneTitle">INTRO</h1>
+        <div class="transport">
+          <button id="play" class="round">▶</button>
+          <div><strong id="elapsed">00:00.0</strong><small> / 01:44.0</small></div>
+          <div class="beat-grid" id="beats"><i></i><i></i><i></i><i></i></div>
+          <label class="bpm"><input id="bpm" type="number" value="128"> <span>BPM</span></label>
+          <button id="tap" class="soft">TAP</button>
+        </div>
+      </div>
+      <button id="blackout" class="blackout"><span>MASTER</span>BLACKOUT<small>SPACE</small></button>
+    </section>
+
+    <section class="scene-row" id="scenes">
+      <button data-scene="INTRO"><span>01</span>INTRO<small>Low rise</small></button>
+      <button data-scene="HEAVY"><span>02</span>HEAVY<small>Full impact</small></button>
+      <button data-scene="BREAKDOWN"><span>03</span>BREAKDOWN<small>Half-time</small></button>
+      <button data-scene="AMBIENT"><span>04</span>AMBIENT<small>Wide wash</small></button>
+      <button data-scene="BLACKOUT"><span>05</span>BLACKOUT<small>All stop</small></button>
+    </section>
+
+    <div class="workspace">
+      <section class="panel timeline-panel">
+        <div class="panel-head"><div><span>SONG TIMELINE</span><b>Firebird · Show 01</b></div><div class="cue-actions"><button id="cueBack" class="soft">← BACK</button><button id="cueGo" class="soft cue-go">GO NEXT →</button></div></div>
+        <div class="ruler"><span>00:00</span><span>00:26</span><span>00:52</span><span>01:18</span><span>01:44</span></div>
+        <div class="timeline" id="timeline">
+          <div class="block intro" style="width:17.3%">INTRO</div><div class="block heavy" style="width:28.8%">HEAVY</div><div class="block breakdown" style="width:26.9%">BREAKDOWN</div><div class="block ambient" style="width:27%">AMBIENT</div>
+          <div class="playhead" id="playhead"></div>
+        </div>
+        <div class="cues" id="cueList"></div>
+      </section>
+
+      <aside class="panel remote-card">
+        <div class="panel-head"><div><span>PHONE REMOTE</span><b>Wireless control</b></div><i class="signal">◒</i></div>
+        <div class="phone-code">REMOTE ONLINE</div>
+        <p>Open this address on a phone connected to the same Wi-Fi:</p>
+        <div class="address" id="remoteAddress">Starting remote…</div>
+        <div class="security"><span>LOCAL NETWORK</span><b>PIN 2049</b></div>
+      </aside>
+    </div>
+
+    <section class="panel visual-engine">
+      <div class="panel-head"><div><span>BLAIZE VISUAL ENGINE</span><b>32 original presets · TCP bridge</b></div><div id="blaizeStatus" class="bridge-status">CONNECTING</div></div>
+      <div class="visual-grid">
+        <label>PRESET <input id="visualPreset" type="range" min="0" max="31"><output id="visualPresetValue">00</output></label>
+        <label>SPEED <input data-visual="speed" type="range" min="0" max="100"><output></output></label>
+        <label>SIZE <input data-visual="size" type="range" min="0" max="100"><output></output></label>
+        <label>BRIGHTNESS <input data-visual="brightness" type="range" min="0" max="100"><output></output></label>
+        <label>STROBE <input data-visual="strobe" type="range" min="0" max="100"><output></output></label>
+        <label>SHADING <input data-visual="shading" type="range" min="0" max="100"><output></output></label>
+        <button id="multicolor" class="soft">MULTICOLOR</button>
+      </div>
+    </section>
+
+    <section class="panel ableton-engine">
+      <div class="panel-head"><div><span>ABLETON LIVE</span><b>Show clock & cue automation</b></div><div id="abletonStatus" class="bridge-status">WAITING FOR OSC</div></div>
+      <div class="ableton-grid">
+        <div><span>OSC I/O</span><b>IN 42070 · OUT 42071</b></div>
+        <div><span>CLOCK</span><b id="abletonClock">128 BPM</b></div>
+        <div><span>LAST CUE</span><b id="abletonMessage">Waiting for Ableton</b></div>
+        <div class="ableton-map"><span>SCENES</span><b>0 Intro · 1 Heavy · 2 Breakdown · 3 Ambient · 4 Blackout</b></div>
+      </div>
+    </section>
+
+    <section class="panel fixtures">
+      <div class="panel-head"><div><span>FIXTURES</span><b>Live output</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
+      <div class="fixture-grid" id="fixtureGrid"></div>
+    </section>
+
+    <section class="panel laser-panel">
+      <div class="panel-head"><div><span>LASER</span><b>Safety-gated output</b></div><div id="laserState" class="laser-state">DISABLED</div></div>
+      <div class="laser-controls">
+        <div class="laser-output" role="group" aria-label="Laser output transport">
+          <button data-laser-output="none" class="active">OFF</button>
+          <button data-laser-output="ilda">ILDA</button>
+          <button data-laser-output="dmx">DMX</button>
+        </div>
+        <div class="laser-status"><span>INTERLOCK <b id="laserInterlock">—</b></span><span>OUTPUT <b id="laserOutput">OFF</b></span></div>
+        <button id="laserArm" class="laser-arm" disabled>ARM LASER</button>
+      </div>
+      <p class="laser-note">Software can never fire alone — needs LASER_ENABLED + a live hardware interlock + a selected output + no blackout. Local operator only; blackout always disarms.</p>
+    </section>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>

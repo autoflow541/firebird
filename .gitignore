@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.next/
+.openai/
+# Local operator config (may hold host/port specifics for a venue)
+firebird.config.json
+# Per-venue projection mapping + uploaded reference photos
+firebird.mapping.json
+mapping-photos/
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log

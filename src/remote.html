@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="theme-color" content="#090a0e"><title>Firebird Remote</title><link rel="stylesheet" href="/styles.css"></head>
+<body class="remote">
+  <header class="remote-header"><div class="brand"><span class="brand-mark">F</span><div><b>FIREBIRD</b><small>AUTO-FLOW · REMOTE</small></div></div><span class="online">● LIVE</span></header>
+  <section class="remote-now"><p>NOW PLAYING</p><h1 id="remoteScene">INTRO</h1><span class="remote-time" id="remoteTime">00:00.0 · 128 BPM</span></section>
+  <section class="remote-scenes">
+    <button data-scene="INTRO">INTRO<small>01 · LOW RISE</small></button><button data-scene="HEAVY">HEAVY<small>02 · FULL IMPACT</small></button>
+    <button data-scene="BREAKDOWN">BREAKDOWN<small>03 · HALF-TIME</small></button><button data-scene="AMBIENT">AMBIENT<small>04 · WIDE WASH</small></button>
+    <button class="wide" id="remoteBlackout">MASTER BLACKOUT</button>
+  </section>
+  <section class="remote-transport"><button id="remoteBack">←</button><button id="remotePlay">▶</button><button id="remoteGo">→</button><label>MASTER<br><input id="remoteMaster" type="range" min="0" max="100"></label><b id="remoteLevel">82%</b></section>
+  <script src="/remote.js"></script>
+</body>
+</html>

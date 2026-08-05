@@ -1,0 +1,108 @@
+const command = (action, value, extra = {}) => window.showControl.command({ action, value, ...extra });
+let state;
+let taps = [];
+
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  return `${String(minutes).padStart(2, "0")}:${(seconds % 60).toFixed(1).padStart(4, "0")}`;
+};
+
+function render(next) {
+  state = next;
+  document.querySelector("#sceneTitle").textContent = next.blackout ? "BLACKOUT" : next.scene;
+  document.querySelector("#blackout").classList.toggle("active", next.blackout);
+  document.querySelector("#play").textContent = next.playing ? "Ⅱ" : "▶";
+  document.querySelector("#elapsed").textContent = formatTime(next.elapsed);
+  document.querySelector("#bpm").value = next.bpm;
+  document.querySelector("#master").value = next.master;
+  document.querySelector("#blaizeStatus").textContent = next.blaize.connected ? "BLAIZE ONLINE" : "BLAIZE OFFLINE · START SKETCH";
+  document.querySelector("#blaizeStatus").classList.toggle("online", next.blaize.connected);
+  document.querySelector("#abletonStatus").textContent = next.ableton.connected ? `ABLETON ONLINE · ${next.ableton.host}` : "WAITING FOR OSC";
+  document.querySelector("#abletonStatus").classList.toggle("online", next.ableton.connected);
+  document.querySelector("#abletonTop").textContent = next.ableton.connected ? "LIVE" : "WAITING";
+  document.querySelector("#abletonTop").style.color = next.ableton.connected ? "var(--green)" : "var(--amber)";
+  document.querySelector("#abletonClock").textContent = `${next.bpm} BPM · BEAT ${next.beat}`;
+  document.querySelector("#abletonMessage").textContent = next.ableton.lastMessage;
+  document.querySelector("#visualPreset").value = next.blaize.preset;
+  document.querySelector("#visualPresetValue").textContent = String(next.blaize.preset).padStart(2, "0");
+  document.querySelectorAll("[data-visual]").forEach((input) => {
+    input.value = next.blaize[input.dataset.visual];
+    input.nextElementSibling.textContent = `${input.value}%`;
+  });
+  document.querySelector("#multicolor").classList.toggle("active", next.blaize.multicolor);
+  document.querySelector("#playhead").style.left = `${Math.min(100, next.elapsed / 104 * 100)}%`;
+  document.querySelectorAll("[data-scene]").forEach((button) => button.classList.toggle("active", button.dataset.scene === next.scene));
+  document.querySelectorAll("#beats i").forEach((beat, index) => beat.classList.toggle("on", index + 1 === next.beat && next.playing));
+  document.querySelectorAll(".cue").forEach((cue, index) => cue.classList.toggle("current", index === next.cueIndex));
+  document.querySelector("#fixtureGrid").innerHTML = next.fixtures.map((fixture) => `
+    <div class="fixture-card ${fixture.locked ? "locked" : ""}">
+      <span class="swatch" style="color:${fixture.color};background:${fixture.color}"></span>
+      <div><b>${fixture.name}</b><small>${fixture.type} · ${fixture.level}%</small></div>
+      ${fixture.locked ? "" : `<input data-fixture="${fixture.id}" type="range" min="0" max="100" value="${fixture.level}">`}
+    </div>`).join("");
+  renderLaser(next.laser);
+}
+
+function renderLaser(laser) {
+  if (!laser) return;
+  const stateEl = document.querySelector("#laserState");
+  const armReady = laser.enabled && laser.interlock && laser.output !== "none" && !state.blackout;
+  stateEl.textContent = !laser.enabled ? "DISABLED" : laser.armed ? "ARMED" : "SAFE HOLD";
+  stateEl.className = "laser-state" + (laser.armed ? " armed" : laser.enabled ? " ready" : "");
+  document.querySelector("#laserInterlock").textContent = laser.interlock ? "PRESENT" : "ABSENT";
+  document.querySelector("#laserOutput").textContent = laser.output.toUpperCase();
+  document.querySelectorAll("[data-laser-output]").forEach((b) => b.classList.toggle("active", b.dataset.laserOutput === laser.output));
+  const arm = document.querySelector("#laserArm");
+  arm.textContent = laser.armed ? "DISARM LASER" : "ARM LASER";
+  arm.classList.toggle("armed", laser.armed);
+  arm.disabled = !laser.armed && !armReady; // can always DISARM; can only ARM when ready
+}
+
+document.querySelector("#cueList").innerHTML = [
+  ["00:00", "Logo / low haze"], ["00:18", "Full band entrance"], ["00:48", "Half-time pulse"], ["01:16", "Wide violet wash"], ["01:44", "End hit"]
+].map(([time, note]) => `<div class="cue"><b>${time}</b><small>${note}</small></div>`).join("");
+
+document.querySelector("#scenes").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-scene]");
+  if (button) command("scene", button.dataset.scene);
+});
+document.querySelector("#blackout").onclick = () => command("blackout", !state.blackout);
+document.querySelector("#cueBack").onclick = () => command("stepCue", -1);
+document.querySelector("#cueGo").onclick = () => command("stepCue", 1);
+document.querySelector("#play").onclick = () => command("togglePlay");
+document.querySelector("#projector").onclick = () => window.showControl.openProjector();
+document.querySelector("#bpm").onchange = (event) => command("bpm", event.target.value);
+document.querySelector("#master").oninput = (event) => command("master", event.target.value);
+document.querySelector("#visualPreset").oninput = (event) => window.showControl.command({ action: "visual", key: "preset", value: event.target.value });
+document.querySelectorAll("[data-visual]").forEach((input) => input.oninput = (event) => window.showControl.command({ action: "visual", key: event.target.dataset.visual, value: event.target.value }));
+document.querySelector("#multicolor").onclick = () => window.showControl.command({ action: "visual", key: "multicolor", value: !state.blaize.multicolor });
+document.querySelector("#fixtureGrid").oninput = (event) => {
+  if (event.target.dataset.fixture) command("fixture", { level: Number(event.target.value) }, { id: event.target.dataset.fixture });
+};
+document.querySelector("#timeline").onclick = (event) => command("seek", event.offsetX / event.currentTarget.clientWidth * 104);
+document.querySelector(".laser-output").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-laser-output]");
+  if (button) window.showControl.command({ action: "laser", key: "output", value: button.dataset.laserOutput });
+});
+document.querySelector("#laserArm").onclick = () => window.showControl.command({ action: "laser", key: "arm", value: !(state.laser && state.laser.armed) });
+document.querySelector("#tap").onclick = () => {
+  const now = performance.now();
+  taps = [...taps.filter((tap) => now - tap < 3000), now].slice(-5);
+  if (taps.length > 1) {
+    const gaps = taps.slice(1).map((tap, index) => tap - taps[index]);
+    command("bpm", Math.round(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length)));
+  }
+};
+window.addEventListener("keydown", (event) => {
+  // Spacebar is an ENGAGE-only panic: it can slam blackout on but never release
+  // it. Releasing is a deliberate click on the blackout button. This prevents a
+  // stray keypress from un-blacking a dark stage.
+  if (event.code === "Space" && !["INPUT", "BUTTON"].includes(event.target.tagName)) {
+    event.preventDefault();
+    command("blackout", true);
+  }
+});
+setInterval(() => document.querySelector("#clock").textContent = new Date().toLocaleTimeString("en-US", { hour12: false }), 1000);
+window.showControl.onState(render);
+window.showControl.onRemoteAddress((address) => document.querySelector("#remoteAddress").textContent = address);
+window.showControl.getState().then(render);

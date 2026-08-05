@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="UTF-8"><style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial;color:#fff}
+/* Full-frame look, shown when no mapping surfaces are defined. */
+.stage{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 55%,#482033,transparent 28%),radial-gradient(circle at 50% 50%,#160c12,#000 68%);transition:1s}
+.stage:before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,#ef31531c,transparent,#765fff22,transparent);animation:spin 18s linear infinite}
+.stage h1{font-size:11vw;letter-spacing:.18em;z-index:1;text-shadow:0 0 45px currentColor}
+.stage p{position:absolute;bottom:8%;font-size:1.2vw;letter-spacing:.5em;color:#888;z-index:1}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Mapping layer: each surface is a warped element corner-pinned to a real surface. */
+#map{position:absolute;inset:0}
+.surface{position:absolute;top:0;left:0;transform-origin:0 0;overflow:hidden}
+.surface.scene{background:radial-gradient(circle at 50% 55%,#482033,#160c12 70%)}
+.surface.grid{background-image:linear-gradient(#0f8 1px,transparent 1px),linear-gradient(90deg,#0f8 1px,transparent 1px);background-size:40px 40px;background-color:#012}
+/* Blackout wins over everything. */
+.blackout #map,.blackout .stage{display:none!important}
+body.blackout{background:#000}
+</style></head><body>
+<main class="stage" id="stage"><h1 id="title">FIREBIRD</h1><p>LIVE VISUAL OUTPUT</p></main>
+<div id="map"></div>
+<script src="warp.js"></script>
+<script src="projector.js"></script>
+</body></html>

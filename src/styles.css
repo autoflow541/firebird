@@ -1,0 +1,79 @@
+:root { --bg:#090a0e; --panel:#111218; --line:#25262e; --muted:#797b87; --cream:#eee9df; --red:#f03757; --violet:#8068ff; --amber:#e5aa42; --green:#4ad698; font-family:Inter,Segoe UI,Arial,sans-serif; color:var(--cream); }
+* { box-sizing:border-box; }
+body { margin:0; background:radial-gradient(circle at 15% 0,#1a1219 0,transparent 28%),var(--bg); min-height:100vh; }
+button,input { font:inherit; }
+button { color:inherit; cursor:pointer; }
+.topbar { height:58px; border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 28px; -webkit-app-region:drag; }
+.brand { display:flex; gap:11px; align-items:center; width:300px; letter-spacing:.14em; }
+.brand-mark { display:grid; place-items:center; width:28px;height:32px;background:var(--red);clip-path:polygon(20% 0,100% 0,78% 43%,100% 43%,15% 100%,38% 55%,0 55%);font-weight:900;color:#0a0a0c; }
+.brand small,.brand b { display:block; }.brand small { font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.26em; }
+.status { flex:1;text-align:center;font-size:9px;letter-spacing:.16em;color:#a9abb5; }
+.status .dot { display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);margin-right:7px; }
+.status em { color:var(--amber);font-style:normal }.divider { display:inline-block;height:13px;border-left:1px solid #333;margin:0 16px;vertical-align:middle; }
+.clock { width:300px;text-align:right;font-family:Consolas,monospace;font-size:12px;color:#9d9eaa; }
+main { max-width:1600px;margin:auto;padding:22px 30px 34px; }
+.hero { display:flex;justify-content:space-between;align-items:flex-end;margin:10px 0 22px; }
+.eyebrow,.panel-head span { margin:0;color:#8c8e99;font-size:9px;letter-spacing:.2em;font-weight:700; }
+h1 { font-size:58px;margin:4px 0 12px;letter-spacing:-.045em;line-height:1; }
+.transport { display:flex;align-items:center;gap:15px; }
+.round { width:38px;height:38px;border-radius:50%;border:1px solid #3a3b43;background:#eee9df;color:#111;padding-left:4px; }
+.transport strong { font-family:Consolas;font-size:17px; }.transport small { color:var(--muted); }
+.beat-grid { display:flex;gap:4px;margin-left:12px; }.beat-grid i { width:5px;height:18px;background:#2d2e36;border-radius:4px }.beat-grid i.on { background:var(--red);box-shadow:0 0 9px #ee365999; }
+.bpm { display:flex;align-items:center;background:#13141a;border:1px solid #2a2b33;border-radius:3px;padding:6px 9px; }.bpm input { width:40px;background:transparent;border:0;color:white;font-weight:700;outline:0 }.bpm span {font-size:8px;color:var(--muted);letter-spacing:.15em}
+.soft { border:1px solid #34353e;background:#17181e;border-radius:3px;font-size:9px;letter-spacing:.13em;padding:10px 13px;font-weight:700; }
+.blackout { width:230px;height:86px;border:1px solid #642335;background:linear-gradient(140deg,#241016,#120c10);color:var(--red);font-size:20px;font-weight:900;letter-spacing:.1em;box-shadow:inset 0 0 35px #e91f4611; }
+.blackout span,.blackout small { display:block;font-size:8px;letter-spacing:.2em;color:#9c5967;margin:0 0 7px }.blackout small { margin:8px 0 0;color:#66404a }.blackout.active { background:#ee3659;color:white;box-shadow:0 0 25px #ee365955; }
+.scene-row { display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px; }
+.scene-row button { position:relative;text-align:left;background:#111218;border:1px solid #292a31;padding:17px 18px;font-size:16px;font-weight:800;letter-spacing:.04em;min-height:76px;overflow:hidden; }
+.scene-row button span { color:#5c5e68;font-size:9px;margin-right:13px;vertical-align:2px }.scene-row button small { display:block;margin:8px 0 0 32px;color:#6f717c;font-size:9px;text-transform:uppercase;letter-spacing:.13em}.scene-row button.active { border-color:var(--red);background:linear-gradient(110deg,#28131a,#121218);box-shadow:inset 3px 0 var(--red); }
+.workspace { display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,1fr);gap:12px;margin-bottom:12px; }
+.panel { background:linear-gradient(135deg,#13141a,#0f1015);border:1px solid var(--line);padding:18px; }
+.panel-head { display:flex;justify-content:space-between;align-items:center;margin-bottom:20px }.panel-head b {display:block;font-size:13px;margin-top:5px}
+.ruler {display:flex;justify-content:space-between;color:#666873;font:9px Consolas;margin-bottom:7px}
+.timeline { height:66px;display:flex;position:relative;background:#0b0c10;overflow:hidden}.block { padding:12px 10px;font-size:9px;font-weight:800;letter-spacing:.12em;border-right:2px solid #0b0c10}.intro{background:#4c1a29}.heavy{background:#402d30}.breakdown{background:#322748}.ambient{background:#18353b}.playhead{position:absolute;left:0;top:0;bottom:0;width:2px;background:white;box-shadow:0 0 9px white}.playhead:before{content:"";position:absolute;top:0;left:-4px;border:5px solid transparent;border-top-color:white}
+.cues { display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:13px}.cue {border-top:1px solid #30313a;padding-top:8px}.cue b,.cue small{display:block}.cue b{font:10px Consolas;color:#bbbcc5}.cue small{font-size:8px;color:#71737d;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cue.current{border-color:var(--red)}.cue.current b{color:var(--red)}
+.cue-actions{display:flex;gap:7px}.cue-go{border-color:#64404a;background:#261319;color:#ff7890}
+.remote-card p { color:#747681;font-size:11px;line-height:1.5}.signal{color:var(--green);font-style:normal}.phone-code{height:52px;border:1px solid #235c48;background:linear-gradient(90deg,#10251d,#12161a);display:grid;place-items:center;color:var(--green);font-size:10px;letter-spacing:.22em}.address{font:12px Consolas;background:#0b0c10;padding:12px;border:1px solid #262730;color:#d7d3ca;word-break:break-all}.security{display:flex;justify-content:space-between;margin-top:18px;color:#686a75;font-size:8px;letter-spacing:.15em}.security b{color:#a8a9b2}
+.fixture-actions {display:flex;align-items:center;gap:18px}.fixture-actions label{font-size:8px;letter-spacing:.14em;color:#7d7f88}.fixture-actions input{width:140px;accent-color:var(--red);vertical-align:middle;margin-left:8px}
+.fixture-grid {display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.fixture-card{border:1px solid #2a2b33;background:#0d0e13;padding:13px;display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center}.fixture-card .swatch{width:8px;height:36px;border-radius:5px;box-shadow:0 0 12px currentColor}.fixture-card b,.fixture-card small{display:block}.fixture-card b{font-size:11px}.fixture-card small{color:#666873;font-size:8px;margin-top:4px;letter-spacing:.1em;text-transform:uppercase}.fixture-card input{width:75px;accent-color:var(--red)}.fixture-card.locked{opacity:.55}.fixture-card.locked:after{content:"LOCKED";font-size:7px;color:var(--amber);letter-spacing:.15em}
+.visual-engine{margin-bottom:12px}.bridge-status{font-size:8px;letter-spacing:.16em;color:var(--amber);border:1px solid #503d20;padding:7px 9px}.bridge-status.online{color:var(--green);border-color:#235c48}.visual-grid{display:grid;grid-template-columns:repeat(6,1fr) auto;gap:15px;align-items:end}.visual-grid label{font-size:8px;letter-spacing:.14em;color:#777986}.visual-grid input{display:block;width:100%;margin-top:10px;accent-color:var(--violet)}.visual-grid output{display:block;color:#d7d3ca;font:10px Consolas;margin-top:5px}.visual-grid button.active{border-color:var(--violet);color:#a999ff;background:#201b37}
+.ableton-engine{margin-bottom:12px}.ableton-grid{display:grid;grid-template-columns:150px 120px 1fr 2fr;gap:10px}.ableton-grid>div{background:#0c0d12;border:1px solid #252630;padding:12px}.ableton-grid span{display:block;font-size:7px;letter-spacing:.16em;color:#696b76;margin-bottom:7px}.ableton-grid b{font:10px Consolas;color:#d7d3ca}.ableton-map b{font-family:Inter,Segoe UI,sans-serif;font-size:9px;color:#9597a1}
+@media(max-width:900px){.status{display:none}.workspace{grid-template-columns:1fr}.scene-row{grid-template-columns:repeat(3,1fr)}.fixture-grid{grid-template-columns:repeat(2,1fr)}}
+
+body.remote { padding:18px;max-width:520px;margin:auto;background:radial-gradient(circle at 50% 0,#26131a 0,transparent 35%),#090a0e; }
+.remote-header {display:flex;justify-content:space-between;align-items:center;margin:10px 0 28px}.remote-header .brand{width:auto}.online{color:var(--green);font-size:8px;letter-spacing:.15em}
+.remote-now{text-align:center;margin-bottom:22px}.remote-now p{font-size:9px;color:#777986;letter-spacing:.2em}.remote-now h1{font-size:45px}.remote-time{font:14px Consolas;color:#a5a6b0}
+.remote-scenes{display:grid;grid-template-columns:1fr 1fr;gap:9px}.remote-scenes button{height:86px;border:1px solid #2b2c33;background:#121319;text-align:left;padding:15px;font-weight:800;letter-spacing:.05em}.remote-scenes button small{display:block;color:#686a75;font-size:8px;margin-top:9px;letter-spacing:.12em}.remote-scenes button.active{border-color:var(--red);box-shadow:inset 3px 0 var(--red);background:#251219}.remote-scenes .wide{grid-column:1/-1;background:#1e0d12;border-color:#572033;color:var(--red);text-align:center;font-size:17px}.remote-scenes .wide.active{background:var(--red);color:white}
+.remote-transport{display:flex;align-items:center;justify-content:space-between;border:1px solid #272830;background:#111218;padding:14px;margin-top:10px}.remote-transport button{width:46px;height:46px;border-radius:50%;border:0;background:#eee9df;color:#111}.remote-transport label{font-size:8px;letter-spacing:.15em;color:#777986}.remote-transport input{width:120px;accent-color:var(--red)}
+
+/* ---------------------------------------------------------------------------
+   Auto-Flow brand pass. Firebird stays dark (correct for a front-of-house
+   desk), and safety-semantic colors are intentionally preserved:
+   red = blackout/danger, green = online, amber = waiting. The Auto-Flow
+   identity comes in through the gold accent (--af-gold, brand #D4A017) applied
+   to the brand mark and the non-semantic VISUAL controls that were violet.
+   Palette per the auto-flow-design-system note.
+--------------------------------------------------------------------------- */
+:root { --af-gold:#D4A017; --af-gold-deep:#b8860b; }
+.brand-mark{ background:var(--af-gold); color:#141414; }        /* firebird mark = brand gold */
+.brand small{ color:var(--af-gold); }                          /* "AUTO-FLOW" eyebrow */
+.visual-grid input{ accent-color:var(--af-gold); }
+.visual-grid button.active{ border-color:var(--af-gold); color:#f0d27a; background:#221b0c; }
+.phone-code{ color:var(--af-gold); border-color:#5a4718; background:linear-gradient(90deg,#231b09,#12161a); }
+.remote-header .brand-mark{ background:var(--af-gold); color:#141414; }
+
+/* Laser panel — safety-gated. Red = armed/danger (kept semantic, not brand). */
+.laser-panel{ margin-bottom:12px; }
+.laser-state{ font-size:9px; letter-spacing:.18em; font-weight:800; padding:6px 12px; border:1px solid #34353e; color:var(--muted); }
+.laser-state.ready{ color:var(--af-gold); border-color:#5a4718; }
+.laser-state.armed{ color:#fff; background:var(--red); border-color:var(--red); box-shadow:0 0 18px #ee365966; }
+.laser-controls{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.laser-output{ display:flex; gap:6px; }
+.laser-output button{ border:1px solid #34353e; background:#17181e; color:#c9cad3; font-size:11px; font-weight:800; letter-spacing:.12em; padding:11px 18px; }
+.laser-output button.active{ border-color:var(--af-gold); color:#141414; background:var(--af-gold); }
+.laser-status{ display:flex; gap:20px; font-size:8px; letter-spacing:.14em; color:#777986; }
+.laser-status b{ color:#d7d3ca; font-family:Consolas,monospace; font-size:11px; margin-left:6px; }
+.laser-arm{ margin-left:auto; border:1px solid #642335; background:#1e0d12; color:var(--red); font-size:13px; font-weight:900; letter-spacing:.1em; padding:12px 22px; }
+.laser-arm.armed{ background:var(--red); color:#fff; }
+.laser-arm:disabled{ opacity:.4; cursor:not-allowed; }
+.laser-note{ margin:14px 0 0; color:#777986; font-size:9px; line-height:1.5; letter-spacing:.02em; }
