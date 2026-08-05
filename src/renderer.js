@@ -45,11 +45,16 @@ function render(next) {
 
 function renderLaser(laser) {
   if (!laser) return;
+  // Most people don't have a laser — hide the whole panel unless it's enabled.
+  const panel = document.querySelector(".laser-panel");
+  if (panel) panel.style.display = laser.enabled ? "" : "none";
+  if (!laser.enabled) return;
   const stateEl = document.querySelector("#laserState");
-  const armReady = laser.enabled && laser.interlock && laser.output !== "none" && !state.blackout;
-  stateEl.textContent = !laser.enabled ? "DISABLED" : laser.armed ? "ARMED" : "SAFE HOLD";
-  stateEl.className = "laser-state" + (laser.armed ? " armed" : laser.enabled ? " ready" : "");
-  document.querySelector("#laserInterlock").textContent = laser.interlock ? "PRESENT" : "ABSENT";
+  const interlockOk = laser.interlock || !laser.requireInterlock;
+  const armReady = laser.enabled && interlockOk && laser.output !== "none" && !state.blackout;
+  stateEl.textContent = laser.armed ? "ARMED" : "SAFE HOLD";
+  stateEl.className = "laser-state" + (laser.armed ? " armed" : " ready");
+  document.querySelector("#laserInterlock").textContent = !laser.requireInterlock ? "KEY (hardware)" : laser.interlock ? "PRESENT" : "ABSENT";
   document.querySelector("#laserOutput").textContent = laser.output.toUpperCase();
   document.querySelectorAll("[data-laser-output]").forEach((b) => b.classList.toggle("active", b.dataset.laserOutput === laser.output));
   const arm = document.querySelector("#laserArm");

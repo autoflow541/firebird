@@ -68,6 +68,12 @@ const defaults = {
   // verified by a laser-safety officer.
   LASER_ENABLED: false,
 
+  // If true, Firebird also requires a wired hardware-interlock signal before it
+  // will arm. Set false when the laser's own KEY SWITCH is the hardware guard
+  // (software still isn't the sole guard — the key is). Blackout still kills the
+  // beam and only the local operator can arm, regardless of this setting.
+  LASER_REQUIRE_INTERLOCK: true,
+
   // Laser output transport, also switchable at runtime from the operator console:
   //   "none" (default, safe) | "dmx" (Art-Net direct) | "ilda" (via an ILDA DAC /
   //   laser-software bridge). Selecting a transport never emits a beam by itself —

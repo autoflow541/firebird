@@ -65,7 +65,11 @@ function initialState() {
       // hardware safety signal. armed: operator has armed AND both above are true.
       // output: which transport the beam control uses — "none" | "dmx" | "ilda".
       // (DMX = Art-Net direct; ILDA = via an ILDA DAC/laser-software bridge.)
-      enabled: false, interlock: false, armed: false, output: "none"
+      // requireInterlock: if true, Firebird also needs a wired hardware-interlock
+      // signal to arm. Set false when the laser's own KEY is the hardware guard
+      // (config LASER_REQUIRE_INTERLOCK). Either way blackout kills the beam and
+      // only the local operator can arm.
+      enabled: false, interlock: false, armed: false, output: "none", requireInterlock: true
     },
     fixtures: [
       { id: "washL", name: "Wash L", type: "RGBW", level: 76, color: "#ec325d" },
@@ -98,9 +102,18 @@ function canRelease(source, state, config) {
 // lines describing anything notable (e.g. an ignored unauthorized action).
 // `cmd` must carry `action`; `cmd.source` is "local" | "remote" | "osc" (default
 // "local"). `config` supplies the authorization policy + clock authority.
+// Actions the sound-reactive engine is ever allowed to perform. Audio must be
+// able to drive the LOOK but never black the stage out or touch the laser.
+const SOUND_ALLOWED = new Set(["visual", "master", "depthfx"]);
+
 function applyCommand(state, cmd, config) {
   const source = cmd.source || "local";
   const log = [];
+
+  if (source === "sound" && !SOUND_ALLOWED.has(cmd.action)) {
+    log.push(`blocked '${cmd.action}' from source 'sound' (sound drives visuals only)`);
+    return log;
+  }
 
   switch (cmd.action) {
     case "blackout": {
@@ -210,7 +223,7 @@ function applyCommand(state, cmd, config) {
           log.push(`blocked laser arm from '${source}' (local operator only)`);
         } else if (!state.laser.enabled) {
           log.push("blocked laser arm (LASER_ENABLED is false)");
-        } else if (!state.laser.interlock) {
+        } else if (state.laser.requireInterlock && !state.laser.interlock) {
           log.push("blocked laser arm (hardware interlock not present)");
         } else if (state.laser.output === "none") {
           log.push("blocked laser arm (no output selected — pick ILDA or DMX)");
@@ -279,8 +292,9 @@ function deriveOutputs(state) {
     // false unless the software switch, hardware interlock, an armed operator, a
     // selected transport, and NO blackout all line up. `output` picks the wire.
     laser: {
-      emit: !blackout && state.laser.enabled && state.laser.interlock &&
-            state.laser.armed && state.laser.output !== "none",
+      emit: !blackout && state.laser.enabled && state.laser.armed &&
+            state.laser.output !== "none" &&
+            (!state.laser.requireInterlock || state.laser.interlock),
       output: state.laser.output
     }
   };

@@ -105,6 +105,23 @@ test("laser output selector: local-only, disarms on change, blocks arm when OFF"
   assert.strictEqual(s.laser.armed, false, "output change did not disarm");
 });
 
+test("laser with KEY as guard (requireInterlock=false): local arms, remote can't, blackout still kills", () => {
+  const s = engine.initialState();
+  s.laser.enabled = true; s.laser.requireInterlock = false; s.laser.output = "dmx";
+  engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "local" }, cfg);
+  assert.strictEqual(s.laser.armed, true, "local could not arm with key as the guard");
+  assert.strictEqual(engine.deriveOutputs(s).laser.emit, true, "should emit when armed with key guard");
+  // Remote still cannot arm.
+  const s2 = engine.initialState();
+  s2.laser.enabled = true; s2.laser.requireInterlock = false; s2.laser.output = "dmx";
+  engine.applyCommand(s2, { action: "laser", key: "arm", value: true, source: "remote" }, cfg);
+  assert.strictEqual(s2.laser.armed, false, "remote armed the laser");
+  // Blackout still disarms AND blanks the beam.
+  engine.applyCommand(s, { action: "blackout", value: true, source: "local" }, cfg);
+  assert.strictEqual(s.laser.armed, false, "blackout did not disarm");
+  assert.strictEqual(engine.deriveOutputs(s).laser.emit, false, "blackout did not blank the laser");
+});
+
 test("laser cannot be armed remotely, or while software-disabled, or during blackout", () => {
   const s = engine.initialState();
   s.laser.enabled = true; s.laser.interlock = true;
@@ -136,6 +153,19 @@ test("losing the interlock disarms the laser", () => {
   engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "local" }, cfg);
   engine.applyCommand(s, { action: "laser", key: "interlock", value: false, source: "local" }, cfg);
   assert.strictEqual(s.laser.armed, false, "laser stayed armed after interlock dropped");
+});
+
+test("sound source drives visuals only — never blackout or laser", () => {
+  const s = engine.initialState();
+  s.laser.enabled = true; s.laser.interlock = true; s.laser.output = "dmx";
+  // Sound CAN drive a visual.
+  engine.applyCommand(s, { action: "visual", key: "brightness", value: 70, source: "sound" }, cfg);
+  assert.strictEqual(s.blaize.brightness, 70, "sound could not drive a visual");
+  // Sound CANNOT engage blackout, and CANNOT arm the laser.
+  engine.applyCommand(s, { action: "blackout", value: true, source: "sound" }, cfg);
+  assert.strictEqual(s.blackout, false, "sound engaged blackout");
+  engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "sound" }, cfg);
+  assert.strictEqual(s.laser.armed, false, "sound armed the laser");
 });
 
 test("Ableton clock: internal timeline does not free-run", () => {

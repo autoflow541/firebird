@@ -33,6 +33,7 @@ state.blaize.port = config.BLAIZE_PORT;
 state.ableton.port = config.OSC_PORT;
 state.ableton.feedbackPort = config.OSC_FEEDBACK_PORT;
 state.laser.enabled = config.LASER_ENABLED;
+state.laser.requireInterlock = config.LASER_REQUIRE_INTERLOCK;
 state.laser.output = ["none", "dmx", "ilda"].includes(config.LASER_OUTPUT) ? config.LASER_OUTPUT : "none";
 
 let artnetSocket; // created at boot for the DMX laser transport
