@@ -8,6 +8,8 @@ firebird.config.json
 # Per-venue projection mapping + uploaded reference photos
 firebird.mapping.json
 mapping-photos/
+# Saved screen captures
+captures/
 # OS / editor cruft
 .DS_Store
 Thumbs.db

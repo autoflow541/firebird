@@ -98,6 +98,17 @@
       </div>
       <p class="laser-note">Software can never fire alone — needs LASER_ENABLED + a live hardware interlock + a selected output + no blackout. Local operator only; blackout always disarms.</p>
     </section>
+
+    <section class="panel stream-panel">
+      <div class="panel-head"><div><span>STREAM</span><b>OBS &amp; capture</b></div><div id="obsState" class="obs-state">OBS OFFLINE</div></div>
+      <div class="stream-controls">
+        <button id="obsConnect" class="soft">CONNECT OBS</button>
+        <button id="obsStream" class="stream-btn">● GO LIVE</button>
+        <button id="obsRecord" class="stream-btn">● RECORD</button>
+        <button id="capture" class="soft">CAPTURE PNG</button>
+      </div>
+      <div class="stream-source"><span>OBS BROWSER SOURCE</span><code id="streamUrl">…</code><small>Add &amp;bg=1 for a full moving background.</small></div>
+    </section>
   </main>
   <script src="renderer.js"></script>
 </body>

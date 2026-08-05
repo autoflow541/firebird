@@ -48,6 +48,13 @@ const defaults = {
   DEPTHFX_HOST: "127.0.0.1",
   DEPTHFX_PORT: 42073,
 
+  // --- Streaming / OBS (OBS 28+: Tools > WebSocket Server Settings) ---
+  // Firebird can drive OBS (start/stop stream+record, switch scenes) so Ableton
+  // cues and the operator control the stream. Non-safety.
+  OBS_URL: "ws://127.0.0.1:4455",
+  OBS_PASSWORD: "",
+  OBS_AUTOCONNECT: false,
+
   // --- Safety ---
   // Master blackout must override timelines, scenes, effects and remote commands.
   // By default only the LOCAL operator can RELEASE a blackout; OSC/remote can only

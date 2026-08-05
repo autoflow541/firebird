@@ -9,5 +9,11 @@ contextBridge.exposeInMainWorld("showControl", {
   // Projection mapping (projector receives; operator/editor sets).
   onMapping: (callback) => ipcRenderer.on("show:mapping", (_, mapping) => callback(mapping)),
   setMapping: (mapping) => ipcRenderer.send("mapping:set", mapping),
-  getMapping: () => ipcRenderer.invoke("mapping:get")
+  getMapping: () => ipcRenderer.invoke("mapping:get"),
+  // Streaming / OBS + captures.
+  obs: (cmd) => ipcRenderer.send("obs:command", cmd),
+  onObsStatus: (callback) => ipcRenderer.on("obs:status", (_, s) => callback(s)),
+  getObsStatus: () => ipcRenderer.invoke("obs:get"),
+  getStreamUrl: () => ipcRenderer.invoke("stream:get"),
+  capture: () => ipcRenderer.invoke("capture")
 });

@@ -9,6 +9,9 @@
     "test": "node test/engine.test.js",
     "check": "node --check src/main.js && node --check src/engine.js && node --check src/config.js && node --check src/renderer.js && node --check src/remote.js && node --check src/projector.js"
   },
+  "dependencies": {
+    "obs-websocket-js": "^5.0.6"
+  },
   "devDependencies": {
     "electron": "^37.2.3"
   }

@@ -77,3 +77,16 @@ body.remote { padding:18px;max-width:520px;margin:auto;background:radial-gradien
 .laser-arm.armed{ background:var(--red); color:#fff; }
 .laser-arm:disabled{ opacity:.4; cursor:not-allowed; }
 .laser-note{ margin:14px 0 0; color:#777986; font-size:9px; line-height:1.5; letter-spacing:.02em; }
+
+/* Streaming / OBS panel */
+.stream-panel{ margin-bottom:12px; }
+.obs-state{ font-size:9px; letter-spacing:.16em; font-weight:800; padding:6px 12px; border:1px solid #34353e; color:var(--muted); }
+.obs-state.ready{ color:var(--green); border-color:#235c48; }
+.obs-state.live{ color:#fff; background:var(--red); border-color:var(--red); box-shadow:0 0 16px #ee365955; }
+.stream-controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.stream-btn{ border:1px solid #34353e; background:#17181e; color:#c9cad3; font-size:11px; font-weight:800; letter-spacing:.1em; padding:11px 18px; }
+.stream-btn.active{ background:var(--red); border-color:var(--red); color:#fff; }
+.stream-source{ margin-top:14px; display:flex; flex-direction:column; gap:5px; }
+.stream-source span{ font-size:8px; letter-spacing:.16em; color:#696b76; }
+.stream-source code{ font:11px Consolas,monospace; color:var(--af-gold); background:#0b0c10; border:1px solid #262730; padding:9px 11px; word-break:break-all; }
+.stream-source small{ font-size:8px; color:#777986; letter-spacing:.04em; }

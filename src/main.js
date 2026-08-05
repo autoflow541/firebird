@@ -9,6 +9,7 @@ const crypto = require("crypto");
 
 const { config } = require("./config");
 const engine = require("./engine");
+const obs = require("./obs");
 
 let controlWindow;
 let projectorWindow;
@@ -70,6 +71,40 @@ function localAddress() {
 
 function remoteUrl() {
   return `http://${localAddress()}:${config.CONTROL_PORT}/?t=${CONTROL_TOKEN}`;
+}
+
+// OBS Browser Source URL (add &bg=1 for a full moving background layer).
+function streamUrl() {
+  return `http://${localAddress()}:${config.CONTROL_PORT}/stream?t=${CONTROL_TOKEN}`;
+}
+
+// OBS control (non-safety). Accepts commands from the operator (IPC) and Ableton
+// (OSC). Never touches blackout or the laser.
+function handleObs(cmd) {
+  switch (cmd && cmd.op) {
+    case "connect": return obs.connect(config.OBS_URL, config.OBS_PASSWORD);
+    case "disconnect": return obs.disconnect();
+    case "toggleStream": return obs.toggleStream();
+    case "startStream": return obs.startStream();
+    case "stopStream": return obs.stopStream();
+    case "toggleRecord": return obs.toggleRecord();
+    case "startRecord": return obs.startRecord();
+    case "stopRecord": return obs.stopRecord();
+    case "scene": return obs.setScene(cmd.value);
+    default: return undefined;
+  }
+}
+
+// Save a PNG capture of the projector output (or the operator window as fallback).
+async function captureProjector() {
+  const target = (projectorWindow && !projectorWindow.isDestroyed()) ? projectorWindow : controlWindow;
+  if (!target) return null;
+  const image = await target.webContents.capturePage();
+  const dir = path.join(__dirname, "..", "captures");
+  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+  const file = path.join(dir, `firebird-${Date.now()}.png`);
+  fs.writeFileSync(file, image.toPNG());
+  return file;
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +350,12 @@ function handleAbletonOsc(message, remote) {
     dispatch({ action: "visual", key: osc.address.split("/").pop(), value, ...osrc });
   } else if (osc.address.startsWith("/firebird/depthfx/")) {
     dispatch({ action: "depthfx", key: osc.address.split("/").pop(), value, ...osrc });
+  } else if (osc.address === "/firebird/obs/stream") {
+    handleObs({ op: Boolean(value) ? "startStream" : "stopStream" });
+  } else if (osc.address === "/firebird/obs/record") {
+    handleObs({ op: Boolean(value) ? "startRecord" : "stopRecord" });
+  } else if (osc.address === "/firebird/obs/scene") {
+    handleObs({ op: "scene", value: String(value) });
   } else {
     broadcast();
   }
@@ -427,9 +468,12 @@ function startControlServer() {
       return;
     }
 
-    // Static assets (require a valid token even to load the page, so a random LAN
-    // scan can't fingerprint the control UI).
-    if (!tokenOk(request, url)) { response.writeHead(401); return response.end("Unauthorized"); }
+    // Static assets are UNGATED (they hold no secrets). The token gates /command
+    // and /events — the real control + live-state boundaries — so loading the
+    // page HTML/JS without a token reveals nothing actionable. This also lets each
+    // page load its own script, and lets OBS load /stream as a Browser Source.
+    if (url.pathname === "/stream" || url.pathname === "/stream.html") return serveFile(response, path.join(__dirname, "stream.html"), "text/html");
+    if (url.pathname === "/stream.js") return serveFile(response, path.join(__dirname, "stream.js"), "text/javascript");
     if (url.pathname === "/remote.js") return serveFile(response, path.join(__dirname, "remote.js"), "text/javascript");
     if (url.pathname === "/styles.css") return serveFile(response, path.join(__dirname, "styles.css"), "text/css");
     return serveFile(response, path.join(__dirname, "remote.html"), "text/html");
@@ -488,6 +532,10 @@ ipcMain.on("mapping:set", (_, next) => {
   pushMapping();
 });
 ipcMain.handle("mapping:get", () => mapping);
+ipcMain.on("obs:command", (_, cmd) => handleObs(cmd));
+ipcMain.handle("obs:get", () => obs.getStatus());
+ipcMain.handle("stream:get", () => streamUrl());
+ipcMain.handle("capture", async () => { try { return await captureProjector(); } catch (error) { return null; } });
 
 app.whenReady().then(() => {
   console.log(`\n  FIREBIRD control token: ${CONTROL_TOKEN}\n  Remote (LAN only): ${remoteUrl()}\n`);
@@ -497,6 +545,8 @@ app.whenReady().then(() => {
   startAbletonOsc();
   artnetSocket = dgram.createSocket("udp4");
   artnetSocket.on("error", (error) => console.error("[artnet] socket error:", error.message));
+  obs.setOnStatus((s) => controlWindow?.webContents.send("obs:status", s));
+  if (config.OBS_AUTOCONNECT) obs.connect(config.OBS_URL, config.OBS_PASSWORD);
   pushOutputs();
   // Heartbeat: advances the internal clock ONLY in internal mode, and re-asserts
   // outputs so a dropped Blaize write / a re-latched blackout self-heals.

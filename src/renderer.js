@@ -85,6 +85,31 @@ document.querySelector(".laser-output").addEventListener("click", (event) => {
   if (button) window.showControl.command({ action: "laser", key: "output", value: button.dataset.laserOutput });
 });
 document.querySelector("#laserArm").onclick = () => window.showControl.command({ action: "laser", key: "arm", value: !(state.laser && state.laser.armed) });
+
+// --- Streaming / OBS ---
+function renderObs(s) {
+  const el = document.querySelector("#obsState");
+  el.textContent = !s.connected ? (s.error || "OBS OFFLINE") : s.streaming ? "● LIVE" : s.recording ? "● RECORDING" : "OBS ONLINE";
+  el.className = "obs-state" + (s.streaming ? " live" : s.connected ? " ready" : "");
+  const stream = document.querySelector("#obsStream");
+  stream.textContent = s.streaming ? "■ STOP LIVE" : "● GO LIVE";
+  stream.classList.toggle("active", s.streaming);
+  const rec = document.querySelector("#obsRecord");
+  rec.textContent = s.recording ? "■ STOP REC" : "● RECORD";
+  rec.classList.toggle("active", s.recording);
+}
+document.querySelector("#obsConnect").onclick = () => window.showControl.obs({ op: "connect" });
+document.querySelector("#obsStream").onclick = () => window.showControl.obs({ op: "toggleStream" });
+document.querySelector("#obsRecord").onclick = () => window.showControl.obs({ op: "toggleRecord" });
+document.querySelector("#capture").onclick = async () => {
+  const file = await window.showControl.capture();
+  const btn = document.querySelector("#capture");
+  btn.textContent = file ? "SAVED ✓" : "CAPTURE FAILED";
+  setTimeout(() => (btn.textContent = "CAPTURE PNG"), 1800);
+};
+window.showControl.onObsStatus(renderObs);
+window.showControl.getObsStatus().then(renderObs);
+window.showControl.getStreamUrl().then((url) => (document.querySelector("#streamUrl").textContent = url));
 document.querySelector("#tap").onclick = () => {
   const now = performance.now();
   taps = [...taps.filter((tap) => now - tap < 3000), now].slice(-5);
