@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebird Projection Mapping</title>
+<style>
+:root{ --gold:#D4A017; --ink:#0a0b0f; --line:#25262e; }
+*{ box-sizing:border-box; margin:0; }
+body{ background:#0a0b0f; color:#eee9df; font-family:Inter,Segoe UI,Arial,sans-serif; height:100vh; display:flex; flex-direction:column; }
+.bar{ display:flex; gap:10px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.bar b{ font-size:12px; letter-spacing:.16em; color:var(--gold); margin-right:8px; }
+.bar button,.bar label.file,.bar select{ font:inherit; font-size:12px; font-weight:700; letter-spacing:.04em; background:#17181e; color:#e7e3d9; border:1px solid #34353e; padding:9px 13px; cursor:pointer; }
+.bar .save{ background:var(--gold); color:#141414; border-color:var(--gold); }
+.bar .file input{ display:none; }
+.bar .op{ display:flex; align-items:center; gap:6px; font-size:10px; letter-spacing:.1em; color:#8b8d97; }
+.bar .op input{ accent-color:var(--gold); }
+.bar button.on{ background:var(--gold); color:#141414; border-color:var(--gold); }
+.stage.preview .handle{ display:none; }
+.stage.preview svg polygon{ stroke:transparent !important; }
+.bar .status{ margin-left:auto; font-size:11px; color:#8b8d97; }
+.stagewrap{ flex:1; display:grid; place-items:center; overflow:auto; background:#050609; padding:18px; }
+.stage{ position:relative; max-width:100%; max-height:100%; box-shadow:0 0 0 1px #23242c; background:#111 repeating-conic-gradient(#141414 0 25%,#0d0d0d 0 50%) 0 0/24px 24px; }
+.stage img{ display:block; max-width:88vw; max-height:78vh; }
+.stage svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.handle{ position:absolute; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:var(--gold); border:2px solid #141414; cursor:grab; touch-action:none; }
+.hint{ padding:9px 16px; font-size:11px; color:#8b8d97; border-top:1px solid var(--line); }
+</style></head>
+<body>
+  <div class="bar">
+    <b>PROJECTION MAP</b>
+    <label class="file">LOAD PHOTO<input id="photo" type="file" accept="image/*"></label>
+    <button id="add">+ SURFACE</button>
+    <button id="del">DELETE</button>
+    <select id="source" title="Source for the selected surface">
+      <option value="solid">Solid color</option>
+      <option value="scene">Scene look</option>
+      <option value="grid">Test grid</option>
+      <option value="webcam">Webcam (live)</option>
+      <option value="depthfx">Kinect depth FX (connect)</option>
+    </select>
+    <input id="color" type="color" value="#D4A017" title="Solid colour">
+    <label class="op">OPACITY<input id="opacity" type="range" min="0" max="100" value="100"></label>
+    <button id="dup">DUPLICATE</button>
+    <button id="preview">PREVIEW</button>
+    <button id="save" class="save">SAVE → PROJECTOR</button>
+    <span class="status" id="status"></span>
+  </div>
+  <div class="stagewrap"><div class="stage" id="stage"><img id="img" alt="Reference photo from the projector's viewpoint"><svg id="svg"></svg></div></div>
+  <div class="hint">Shoot the photo from as close to the projector lens as you can. Add a surface, drag its 4 corners onto a real surface in the photo, pick a source, Save. Because the photo is from the projector's view, what you outline is what lands on the wall — then fine-tune against the live projection.</div>
+  <script src="mapping.js"></script>
+</body></html>

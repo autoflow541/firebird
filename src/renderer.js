@@ -77,6 +77,7 @@ document.querySelector("#cueBack").onclick = () => command("stepCue", -1);
 document.querySelector("#cueGo").onclick = () => command("stepCue", 1);
 document.querySelector("#play").onclick = () => command("togglePlay");
 document.querySelector("#projector").onclick = () => window.showControl.openProjector();
+document.querySelector("#mapEditor").onclick = () => window.showControl.openMapping();
 document.querySelector("#bpm").onchange = (event) => command("bpm", event.target.value);
 document.querySelector("#master").oninput = (event) => command("master", event.target.value);
 document.querySelector("#visualPreset").oninput = (event) => window.showControl.command({ action: "visual", key: "preset", value: event.target.value });

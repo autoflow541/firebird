@@ -10,6 +10,15 @@
 const colors = { INTRO: "#ee3659", HEAVY: "#f04a31", BREAKDOWN: "#856cff", AMBIENT: "#4ed6cc", BLACKOUT: "#000" };
 let mapping = { surfaces: [] };
 
+// Shared webcam stream (opened on demand when a webcam surface is first used).
+let webcamStream = null;
+async function ensureWebcam() {
+  if (webcamStream) return webcamStream;
+  try { webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }
+  catch (error) { console.error("[projector] webcam unavailable:", error.message); }
+  return webcamStream;
+}
+
 function renderState(state) {
   document.body.classList.toggle("blackout", state.blackout);
   const stage = document.querySelector("#stage");
@@ -29,7 +38,16 @@ function renderMapping() {
     el.className = "surface " + (surface.source || "solid");
     el.style.width = W + "px";
     el.style.height = H + "px";
-    if ((surface.source || "solid") === "solid") el.style.background = surface.color || "#ffffff";
+    el.style.opacity = surface.opacity == null ? 1 : surface.opacity;
+    const source = surface.source || "solid";
+    if (source === "solid") el.style.background = surface.color || "#ffffff";
+    if (source === "webcam") {
+      const v = document.createElement("video");
+      v.autoplay = true; v.muted = true; v.playsInline = true;
+      v.style.width = "100%"; v.style.height = "100%"; v.style.objectFit = "cover"; v.style.display = "block";
+      el.appendChild(v);
+      ensureWebcam().then((s) => { if (s) v.srcObject = s; });
+    }
     const px = surface.corners.map((c) => ({ x: c.x * W, y: c.y * H })); // normalized -> px
     el.style.transform = window.FirebirdWarp.matrix3dFor(W, H, px);
     map.appendChild(el);

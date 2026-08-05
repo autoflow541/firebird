@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("showControl", {
   onMapping: (callback) => ipcRenderer.on("show:mapping", (_, mapping) => callback(mapping)),
   setMapping: (mapping) => ipcRenderer.send("mapping:set", mapping),
   getMapping: () => ipcRenderer.invoke("mapping:get"),
+  openMapping: () => ipcRenderer.send("mapping:open"),
   // Sound-reactive engine (operator window emits audio-driven commands).
   sound: (cmd) => ipcRenderer.send("sound:command", cmd),
   // Streaming / OBS + captures.

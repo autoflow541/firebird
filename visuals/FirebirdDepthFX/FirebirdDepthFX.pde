@@ -34,6 +34,13 @@ float   colorSpeed = 1.0;      // hue cycle rate
 float   near = 500, far = 2500;// depth window in mm that isolates the performer
 boolean mirror = true;         // flip X so on-screen motion matches you
 
+// Projection-mapping link (from Firebird). When mapped, the fx output is warped
+// onto the quad (normalized corners TL,TR,BL,BR) that you drew in the mapping
+// editor — so the Kinect visuals land on a real surface instead of the full frame.
+boolean mapped = false;
+float[] qx = {0, 1, 0, 1};      // TL,TR,BL,BR
+float[] qy = {0, 0, 1, 1};
+
 // ---- Internals ------------------------------------------------------------
 KinectPV2 kinect;              // <-- CAPTURE (v2)
 OscP5 oscP5;
@@ -48,6 +55,7 @@ void settings() {
 
 void setup() {
   colorMode(HSB, 360, 100, 100, 255);
+  textureMode(NORMAL);   // quad texture coords are 0..1
   frameRate(60);
 
   // ---- CAPTURE (v2): start the Kinect --------------------------------------
@@ -101,8 +109,20 @@ void draw() {
   fx.popMatrix();
   fx.endDraw();
 
-  // 3) Blit the accumulated buffer to the projector.
-  image(fx, 0, 0, width, height);
+  // 3) Blit to the projector — warped onto the mapped surface if Firebird sent a
+  //    quad, otherwise full frame.
+  if (mapped) {
+    background(0);
+    beginShape(QUADS);
+    texture(fx);
+    vertex(qx[0] * width, qy[0] * height, 0, 0); // TL
+    vertex(qx[1] * width, qy[1] * height, 1, 0); // TR
+    vertex(qx[3] * width, qy[3] * height, 1, 1); // BR
+    vertex(qx[2] * width, qy[2] * height, 0, 1); // BL
+    endShape();
+  } else {
+    image(fx, 0, 0, width, height);
+  }
 }
 
 // ---- CAPTURE-agnostic depth accessor -------------------------------------
@@ -122,6 +142,11 @@ void oscEvent(OscMessage m) {
   else if (a.equals("/depthfx/near"))       near       = m.get(0).floatValue();
   else if (a.equals("/depthfx/far"))        far        = m.get(0).floatValue();
   else if (a.equals("/depthfx/mirror"))     mirror     = m.get(0).intValue() == 1;
+  else if (a.equals("/depthfx/mapped"))     mapped     = m.get(0).intValue() == 1;
+  else if (a.equals("/depthfx/quad")) {
+    // 8 floats: x0 y0 x1 y1 x2 y2 x3 y3 (TL,TR,BL,BR normalized)
+    for (int i = 0; i < 4; i++) { qx[i] = m.get(i * 2).floatValue(); qy[i] = m.get(i * 2 + 1).floatValue(); }
+  }
 }
 
 // ---- Local keys (for solo testing without Firebird) ----------------------

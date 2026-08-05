@@ -13,6 +13,7 @@ const obs = require("./obs");
 
 let controlWindow;
 let projectorWindow;
+let mappingWindow;
 let server;
 let blaizeSocket;
 let blaizeRetry;
@@ -240,6 +241,12 @@ function makeOsc(address, tag, value) {
   return Buffer.concat(parts);
 }
 
+function makeOscFloats(address, values) {
+  const parts = [oscString(address), oscString("," + "f".repeat(values.length))];
+  for (const v of values) { const d = Buffer.alloc(4); d.writeFloatBE(Number(v) || 0); parts.push(d); }
+  return Buffer.concat(parts);
+}
+
 function sendAbletonFeedback() {
   if (!abletonOsc) return;
   const host = config.OSC_FEEDBACK_HOST; // fixed by config, never learned from senders
@@ -275,6 +282,16 @@ function sendDepthFX() {
   ];
   for (const [address, tag, value] of messages) {
     abletonOsc.send(makeOsc(address, tag, value), port, host, () => {});
+  }
+  // Projection-mapping link: if a mapped surface uses the Kinect depth-FX source,
+  // forward its quad (normalized, TL,TR,BL,BR) so the sketch warps its silhouette
+  // + tracers onto that real surface instead of filling the screen.
+  const ds = (mapping.surfaces || []).find((s) => s.source === "depthfx" && s.corners && s.corners.length === 4);
+  abletonOsc.send(makeOsc("/depthfx/mapped", "i", ds ? 1 : 0), port, host, () => {});
+  if (ds) {
+    const q = [];
+    for (const c of ds.corners) q.push(c.x, c.y);
+    abletonOsc.send(makeOscFloats("/depthfx/quad", q), port, host, () => {});
   }
 }
 
@@ -476,12 +493,32 @@ function startControlServer() {
       return;
     }
 
+    // Projection mapping data (token-gated). GET returns current mapping; POST
+    // (from the phone editor) replaces it and pushes to the projector.
+    if (url.pathname === "/mapping") {
+      if (!tokenOk(request, url)) { response.writeHead(401); return response.end("Unauthorized"); }
+      if (request.method === "POST") {
+        let body = "", tooBig = false;
+        request.on("data", (c) => { body += c; if (body.length > 200000) { tooBig = true; request.destroy(); } });
+        request.on("end", () => {
+          if (tooBig) return;
+          try { const next = JSON.parse(body); mapping = next && Array.isArray(next.surfaces) ? next : { surfaces: [] }; saveMapping(); pushMapping(); } catch {}
+          response.writeHead(204); response.end();
+        });
+        return;
+      }
+      response.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      return response.end(JSON.stringify(mapping));
+    }
+
     // Static assets are UNGATED (they hold no secrets). The token gates /command
     // and /events — the real control + live-state boundaries — so loading the
     // page HTML/JS without a token reveals nothing actionable. This also lets each
     // page load its own script, and lets OBS load /stream as a Browser Source.
     if (url.pathname === "/stream" || url.pathname === "/stream.html") return serveFile(response, path.join(__dirname, "stream.html"), "text/html");
     if (url.pathname === "/stream.js") return serveFile(response, path.join(__dirname, "stream.js"), "text/javascript");
+    if (url.pathname === "/map" || url.pathname === "/mapping.html") return serveFile(response, path.join(__dirname, "mapping.html"), "text/html");
+    if (url.pathname === "/mapping.js") return serveFile(response, path.join(__dirname, "mapping.js"), "text/javascript");
     if (url.pathname === "/remote.js") return serveFile(response, path.join(__dirname, "remote.js"), "text/javascript");
     if (url.pathname === "/styles.css") return serveFile(response, path.join(__dirname, "styles.css"), "text/css");
     return serveFile(response, path.join(__dirname, "remote.html"), "text/html");
@@ -529,9 +566,20 @@ function openProjector() {
   projectorWindow.on("closed", () => (projectorWindow = null));
 }
 
+function openMappingEditor() {
+  if (mappingWindow && !mappingWindow.isDestroyed()) return mappingWindow.focus();
+  mappingWindow = new BrowserWindow({
+    width: 1180, height: 820, backgroundColor: "#0a0b0f",
+    webPreferences: { preload: path.join(__dirname, "preload.js") }
+  });
+  mappingWindow.loadFile(path.join(__dirname, "mapping.html"));
+  mappingWindow.on("closed", () => (mappingWindow = null));
+}
+
 // IPC from the operator console is trusted as the LOCAL operator.
 ipcMain.on("show:command", (_, patch) => dispatch({ ...patch, source: "local" }));
 ipcMain.on("projector:open", openProjector);
+ipcMain.on("mapping:open", openMappingEditor);
 ipcMain.handle("show:get", () => state);
 ipcMain.handle("remote:get", () => remoteUrl());
 ipcMain.on("mapping:set", (_, next) => {
