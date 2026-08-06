@@ -86,6 +86,7 @@
       running = true;
       $("#soundToggle").textContent = "● SOUND ON";
       $("#soundToggle").classList.add("active");
+      document.querySelector('#tabstrip [data-tab="sound"]')?.classList.add("live");
       populateDevices(); // labels become available once permission is granted
       analyse();
     } catch (error) {
@@ -102,6 +103,7 @@
     ctx = analyser = source = stream = null;
     $("#soundToggle").textContent = "SOUND OFF";
     $("#soundToggle").classList.remove("active");
+    document.querySelector('#tabstrip [data-tab="sound"]')?.classList.remove("live");
     meters(0, 0, 0, 0);
   }
 

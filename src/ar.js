@@ -18,7 +18,10 @@
   const cfg = { mode: "torso", margin: 0.15, smooth: 0.35 };
   let landmarker = null, video = null, stream = null, raf = null, running = false, prev = null;
 
-  const setStatus = (t) => { const el = document.querySelector("#arState"); if (el) el.textContent = t; };
+  const setStatus = (t) => {
+    const el = document.querySelector("#arState"); if (el) el.textContent = t;
+    document.querySelector('#tabstrip [data-tab="fixtures"]')?.classList.toggle("live", /TRACKING/.test(t));
+  };
 
   async function ensureModel() {
     if (landmarker) return true;

@@ -16,7 +16,13 @@ const send = (action, value) =>
 
 const format = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${(seconds % 60).toFixed(1).padStart(4, "0")}`;
 
-new EventSource(`/events?t=${encodeURIComponent(TOKEN)}`).onmessage = ({ data }) => {
+const online = document.querySelector(".online");
+const es = new EventSource(`/events?t=${encodeURIComponent(TOKEN)}`);
+// EventSource auto-reconnects; surface the state so the performer knows if the
+// link drops (Wi-Fi roam, bridge restart) rather than trusting a stale screen.
+es.onopen = () => { if (online) { online.textContent = "● LIVE"; online.classList.remove("offline"); } };
+es.onerror = () => { if (online) { online.textContent = "● RECONNECTING…"; online.classList.add("offline"); } };
+es.onmessage = ({ data }) => {
   state = JSON.parse(data);
   document.querySelector("#remoteScene").textContent = state.blackout ? "BLACKOUT" : state.scene;
   document.querySelector("#remoteTime").textContent = `${format(state.elapsed)} · ${state.bpm} BPM`;

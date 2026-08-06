@@ -86,6 +86,16 @@ document.querySelector("#tabstrip").addEventListener("click", (event) => {
   document.querySelectorAll("#tabstrip button").forEach((b) => b.classList.toggle("active", b === button));
   document.querySelectorAll(".tabpanel").forEach((p) => p.classList.toggle("active", p.dataset.tab === button.dataset.tab));
 });
+
+// FOH keyboard shortcuts: 1–5 = scenes (matches the tile numbers), ←/→ = cue
+// back/next. (Space = engage blackout, handled above.) Ignored while typing.
+const SCENE_KEYS = { "1": "INTRO", "2": "HEAVY", "3": "BREAKDOWN", "4": "AMBIENT", "5": "BLACKOUT" };
+window.addEventListener("keydown", (event) => {
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(event.target.tagName) || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (SCENE_KEYS[event.key]) { event.preventDefault(); command("scene", SCENE_KEYS[event.key]); }
+  else if (event.key === "ArrowLeft") { event.preventDefault(); command("stepCue", -1); }
+  else if (event.key === "ArrowRight") { event.preventDefault(); command("stepCue", 1); }
+});
 document.querySelector("#bpm").onchange = (event) => command("bpm", event.target.value);
 document.querySelector("#master").oninput = (event) => command("master", event.target.value);
 document.querySelector("#visualPreset").oninput = (event) => window.showControl.command({ action: "visual", key: "preset", value: event.target.value });
@@ -111,6 +121,8 @@ function renderObs(s) {
   const rec = document.querySelector("#obsRecord");
   rec.textContent = s.recording ? "■ STOP REC" : "● RECORD";
   rec.classList.toggle("active", s.recording);
+  const tab = document.querySelector('#tabstrip [data-tab="stream"]');
+  if (tab) tab.classList.toggle("live", s.streaming || s.recording);
 }
 document.querySelector("#obsConnect").onclick = () => window.showControl.obs({ op: "connect" });
 document.querySelector("#obsStream").onclick = () => window.showControl.obs({ op: "toggleStream" });
