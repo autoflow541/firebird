@@ -57,7 +57,17 @@
       </aside>
     </div>
 
-    <section class="panel visual-engine">
+    <div class="tabs">
+      <nav class="tabstrip" id="tabstrip">
+        <button data-tab="visuals" class="active">VISUALS</button>
+        <button data-tab="sound">SOUND</button>
+        <button data-tab="ableton">ABLETON</button>
+        <button data-tab="fixtures">FIXTURES</button>
+        <button data-tab="stream">STREAM</button>
+        <button data-tab="laser" id="laserTab" hidden>LASER</button>
+      </nav>
+
+    <section class="panel visual-engine tabpanel active" data-tab="visuals">
       <div class="panel-head"><div><span>BLAIZE VISUAL ENGINE</span><b>32 original presets · TCP bridge</b></div><div id="blaizeStatus" class="bridge-status">CONNECTING</div></div>
       <div class="visual-grid">
         <label>PRESET <input id="visualPreset" type="range" min="0" max="31"><output id="visualPresetValue">00</output></label>
@@ -70,7 +80,7 @@
       </div>
     </section>
 
-    <section class="panel ableton-engine">
+    <section class="panel ableton-engine tabpanel" data-tab="ableton">
       <div class="panel-head"><div><span>ABLETON LIVE</span><b>Show clock & cue automation</b></div><div id="abletonStatus" class="bridge-status">WAITING FOR OSC</div></div>
       <div class="ableton-grid">
         <div><span>OSC I/O</span><b>IN 42070 · OUT 42071</b></div>
@@ -80,12 +90,12 @@
       </div>
     </section>
 
-    <section class="panel fixtures">
+    <section class="panel fixtures tabpanel" data-tab="fixtures">
       <div class="panel-head"><div><span>FIXTURES</span><b>Live output</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="arTrack" class="soft">AR TRACK ME</button><span id="arState" class="ar-state">AR OFF</span><button id="mapEditor" class="soft">PROJECTION MAP</button><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
       <div class="fixture-grid" id="fixtureGrid"></div>
     </section>
 
-    <section class="panel laser-panel">
+    <section class="panel laser-panel tabpanel" data-tab="laser">
       <div class="panel-head"><div><span>LASER</span><b>Safety-gated output</b></div><div id="laserState" class="laser-state">DISABLED</div></div>
       <div class="laser-controls">
         <label class="laser-output-label">OUTPUT
@@ -102,7 +112,7 @@
       <p class="laser-note">Software can never fire alone — needs LASER_ENABLED + a live hardware interlock + a selected output + no blackout. Local operator only; blackout always disarms.</p>
     </section>
 
-    <section class="panel stream-panel">
+    <section class="panel stream-panel tabpanel" data-tab="stream">
       <div class="panel-head"><div><span>STREAM</span><b>OBS &amp; capture</b></div><div id="obsState" class="obs-state">OBS OFFLINE</div></div>
       <div class="stream-controls">
         <button id="obsConnect" class="soft">CONNECT OBS</button>
@@ -113,7 +123,7 @@
       <div class="stream-source"><span>OBS BROWSER SOURCE</span><code id="streamUrl">…</code><small>Add &amp;bg=1 for a full moving background.</small></div>
     </section>
 
-    <section class="panel sound-panel">
+    <section class="panel sound-panel tabpanel" data-tab="sound">
       <div class="panel-head"><div><span>SOUND</span><b>Audio-reactive visuals</b></div><button id="soundToggle" class="sound-toggle">SOUND OFF</button></div>
       <div class="sound-controls">
         <label>INPUT <select id="soundDevice"><option value="">Default input</option></select></label>
@@ -129,6 +139,7 @@
       </div>
       <p class="sound-note">Reacts the visuals to the music — Blaize, depth-FX, master. Sound drives visuals only; never blackout or the laser.</p>
     </section>
+    </div>
   </main>
   <script src="soundmap.js"></script>
   <script src="sound.js"></script>

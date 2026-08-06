@@ -46,8 +46,9 @@ function render(next) {
 function renderLaser(laser) {
   if (!laser) return;
   // Most people don't have a laser — hide the whole panel unless it's enabled.
-  const panel = document.querySelector(".laser-panel");
-  if (panel) panel.style.display = laser.enabled ? "" : "none";
+  // Laser is a tab; show its tab only when enabled (most rigs have no laser).
+  const tab = document.querySelector("#laserTab");
+  if (tab) tab.hidden = !laser.enabled;
   if (!laser.enabled) return;
   const stateEl = document.querySelector("#laserState");
   const interlockOk = laser.interlock || !laser.requireInterlock;
@@ -79,6 +80,12 @@ document.querySelector("#play").onclick = () => command("togglePlay");
 document.querySelector("#projector").onclick = () => window.showControl.openProjector();
 document.querySelector("#mapEditor").onclick = () => window.showControl.openMapping();
 document.querySelector("#arTrack").onclick = () => window.FirebirdAR && window.FirebirdAR.toggle();
+document.querySelector("#tabstrip").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-tab]");
+  if (!button) return;
+  document.querySelectorAll("#tabstrip button").forEach((b) => b.classList.toggle("active", b === button));
+  document.querySelectorAll(".tabpanel").forEach((p) => p.classList.toggle("active", p.dataset.tab === button.dataset.tab));
+});
 document.querySelector("#bpm").onchange = (event) => command("bpm", event.target.value);
 document.querySelector("#master").oninput = (event) => command("master", event.target.value);
 document.querySelector("#visualPreset").oninput = (event) => window.showControl.command({ action: "visual", key: "preset", value: event.target.value });
