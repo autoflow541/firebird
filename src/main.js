@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const { config } = require("./config");
 const engine = require("./engine");
 const obs = require("./obs");
+const link = require("./link");
 
 let controlWindow;
 let projectorWindow;
@@ -115,6 +116,7 @@ async function captureProjector() {
 function dispatch(cmd) {
   const log = engine.applyCommand(state, cmd, config);
   for (const line of log) console.warn("[safety]", line);
+  if (cmd.action === "bpm") link.setBpm(state.bpm); // push manual/tap tempo to Link peers
   pushOutputs();
   broadcast();
 }
@@ -519,6 +521,9 @@ function startControlServer() {
     if (url.pathname === "/stream.js") return serveFile(response, path.join(__dirname, "stream.js"), "text/javascript");
     if (url.pathname === "/map" || url.pathname === "/mapping.html") return serveFile(response, path.join(__dirname, "mapping.html"), "text/html");
     if (url.pathname === "/mapping.js") return serveFile(response, path.join(__dirname, "mapping.js"), "text/javascript");
+    if (url.pathname === "/ar" || url.pathname === "/ar-filter.html") return serveFile(response, path.join(__dirname, "ar-filter.html"), "text/html");
+    if (url.pathname === "/ar-filter.js") return serveFile(response, path.join(__dirname, "ar-filter.js"), "text/javascript");
+    if (url.pathname === "/armap.js") return serveFile(response, path.join(__dirname, "armap.js"), "text/javascript");
     if (url.pathname === "/remote.js") return serveFile(response, path.join(__dirname, "remote.js"), "text/javascript");
     if (url.pathname === "/styles.css") return serveFile(response, path.join(__dirname, "styles.css"), "text/css");
     return serveFile(response, path.join(__dirname, "remote.html"), "text/html");
@@ -576,10 +581,22 @@ function openMappingEditor() {
   mappingWindow.on("closed", () => (mappingWindow = null));
 }
 
+let arFilterWindow;
+function openArFilter() {
+  if (arFilterWindow && !arFilterWindow.isDestroyed()) return arFilterWindow.focus();
+  arFilterWindow = new BrowserWindow({
+    width: 1000, height: 640, backgroundColor: "#000000",
+    webPreferences: { preload: path.join(__dirname, "preload.js") }
+  });
+  arFilterWindow.loadFile(path.join(__dirname, "ar-filter.html"));
+  arFilterWindow.on("closed", () => (arFilterWindow = null));
+}
+
 // IPC from the operator console is trusted as the LOCAL operator.
 ipcMain.on("show:command", (_, patch) => dispatch({ ...patch, source: "local" }));
 ipcMain.on("projector:open", openProjector);
 ipcMain.on("mapping:open", openMappingEditor);
+ipcMain.on("arfilter:open", openArFilter);
 ipcMain.handle("show:get", () => state);
 ipcMain.handle("remote:get", () => remoteUrl());
 ipcMain.on("mapping:set", (_, next) => {
@@ -631,7 +648,7 @@ ipcMain.handle("capture", async () => { try { return await captureProjector(); }
 app.whenReady().then(() => {
   console.log(`\n  FIREBIRD control token: ${CONTROL_TOKEN}\n  Remote (LAN only): ${remoteUrl()}\n`);
   // Allow the operator window to use the mic/line-in for the sound-reactive engine.
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "media"));
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "media" || permission === "midi"));
   createWindows();
   startControlServer();
   connectBlaize();
@@ -640,6 +657,12 @@ app.whenReady().then(() => {
   artnetSocket.on("error", (error) => console.error("[artnet] socket error:", error.message));
   obs.setOnStatus((s) => controlWindow?.webContents.send("obs:status", s));
   if (config.OBS_AUTOCONNECT) obs.connect(config.OBS_URL, config.OBS_PASSWORD);
+  // Ableton Link (optional native): when a peer changes tempo, follow it.
+  state.ableton.link = link.start(config, (bpm) => {
+    state.bpm = engine.clamp(bpm, 30, 300);
+    state.ableton.link = link.getStatus();
+    broadcast();
+  });
   pushOutputs();
   // Heartbeat: advances the internal clock ONLY in internal mode, and re-asserts
   // outputs so a dropped Blaize write / a re-latched blackout self-heals.

@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("showControl", {
   setMapping: (mapping) => ipcRenderer.send("mapping:set", mapping),
   getMapping: () => ipcRenderer.invoke("mapping:get"),
   openMapping: () => ipcRenderer.send("mapping:open"),
+  openArFilter: () => ipcRenderer.send("arfilter:open"),
   // AR: live body-tracked quad drives any surface flagged track:true.
   arQuad: (quad) => ipcRenderer.send("ar:quad", quad),
   // Sound-reactive engine (operator window emits audio-driven commands).

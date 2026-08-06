@@ -22,6 +22,8 @@ function render(next) {
   document.querySelector("#abletonTop").textContent = next.ableton.connected ? "LIVE" : "WAITING";
   document.querySelector("#abletonTop").style.color = next.ableton.connected ? "var(--green)" : "var(--amber)";
   document.querySelector("#abletonClock").textContent = `${next.bpm} BPM · BEAT ${next.beat}`;
+  const lk = next.ableton.link;
+  document.querySelector("#abletonLink").textContent = lk && lk.enabled ? `${lk.peers} peer${lk.peers === 1 ? "" : "s"} · ${lk.bpm} BPM` : (lk && lk.error ? "not installed" : "off");
   document.querySelector("#abletonMessage").textContent = next.ableton.lastMessage;
   document.querySelector("#visualPreset").value = next.blaize.preset;
   document.querySelector("#visualPresetValue").textContent = String(next.blaize.preset).padStart(2, "0");
@@ -99,6 +101,7 @@ document.querySelector("#play").onclick = () => command("togglePlay");
 document.querySelector("#projector").onclick = () => window.showControl.openProjector();
 document.querySelector("#mapEditor").onclick = () => window.showControl.openMapping();
 document.querySelector("#arTrack").onclick = () => window.FirebirdAR && window.FirebirdAR.toggle();
+document.querySelector("#arFilter").onclick = () => window.showControl.openArFilter();
 document.querySelector("#tabstrip").addEventListener("click", (event) => {
   const button = event.target.closest("[data-tab]");
   if (!button) return;

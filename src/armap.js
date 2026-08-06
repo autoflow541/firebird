@@ -1,24 +1,21 @@
 /**
- * armap.js — pure geometry for "mapping a human". Turns body-tracking landmarks
- * into a projection-mapping quad (TL, TR, BL, BR normalized), so a mapped surface
- * can follow a moving person. AR = projection mapping where the surface is a body.
+ * armap.js — pure geometry for the two AR features (no dependencies, unit-tested;
+ * the MediaPipe/webcam plumbing lives in ar.js / ar-filter.js).
  *
- * Dual-use (browser <script> + Node tests), no dependencies. The MediaPipe/webcam
- * plumbing lives in ar.js; this is just the math so it can be unit-tested.
+ *  1) landmarksToQuad — "map a human": pose landmarks -> a mapping quad (TL,TR,
+ *     BL,BR normalized) so a mapped surface follows a moving person.
+ *  2) headPose — the AR sombrero filter: pose landmarks -> a hat transform
+ *     { x, y, width, angle } (head-centre normalized, ear-to-ear width, tilt rad).
  *
- * Landmarks are normalized {x,y} (0..1). Pose indices used (MediaPipe Pose):
- *   11 left shoulder, 12 right shoulder, 23 left hip, 24 right hip.
+ * Pose indices (MediaPipe Pose): 0 nose, 2 left eye, 5 right eye, 7 left ear,
+ * 8 right ear, 11/12 shoulders, 23/24 hips.
  */
 (function (root) {
   "use strict";
 
   function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
-  // Build a quad from pose landmarks.
-  //   mode "torso" (default): shoulders + hips.
-  //   mode "bbox": bounding box of all provided points.
-  // margin expands the quad outward (fraction of its size). Returns 4 {x,y}
-  // corners in TL,TR,BL,BR order, or null if there isn't enough to work with.
+  // ---- (1) map-a-human quad ------------------------------------------------
   function landmarksToQuad(landmarks, opts) {
     const o = opts || {};
     const margin = o.margin == null ? 0.15 : o.margin;
@@ -36,17 +33,11 @@
       const botL = lh.x <= rh.x ? lh : rh, botR = lh.x <= rh.x ? rh : lh;
       pts = [{ x: topL.x, y: topL.y }, { x: topR.x, y: topR.y }, { x: botL.x, y: botL.y }, { x: botR.x, y: botR.y }];
     }
-
-    // Expand outward from the centroid by `margin`.
     const cx = (pts[0].x + pts[1].x + pts[2].x + pts[3].x) / 4;
     const cy = (pts[0].y + pts[1].y + pts[2].y + pts[3].y) / 4;
-    return pts.map((p) => ({
-      x: clamp01(cx + (p.x - cx) * (1 + margin)),
-      y: clamp01(cy + (p.y - cy) * (1 + margin))
-    }));
+    return pts.map((p) => ({ x: clamp01(cx + (p.x - cx) * (1 + margin)), y: clamp01(cy + (p.y - cy) * (1 + margin)) }));
   }
 
-  // Exponential smoothing between two quads to kill jitter (alpha = new weight).
   function smoothQuad(prev, next, alpha) {
     if (!prev) return next;
     if (!next) return prev;
@@ -54,7 +45,28 @@
     return next.map((p, i) => ({ x: prev[i].x + (p.x - prev[i].x) * a, y: prev[i].y + (p.y - prev[i].y) * a }));
   }
 
-  const api = { landmarksToQuad, smoothQuad, clamp01 };
+  // ---- (2) AR sombrero filter — head placement -----------------------------
+  function headPose(landmarks) {
+    if (!landmarks || landmarks.length < 9) return null;
+    const le = landmarks[7], re = landmarks[8]; // ears
+    if (!le || !re) return null;
+    return {
+      x: (le.x + re.x) / 2,
+      y: (le.y + re.y) / 2,
+      width: Math.hypot(re.x - le.x, re.y - le.y),
+      angle: Math.atan2(re.y - le.y, re.x - le.x)
+    };
+  }
+
+  function smoothPose(prev, next, alpha) {
+    if (!prev) return next;
+    if (!next) return prev;
+    const a = alpha == null ? 0.4 : alpha;
+    const lerp = (p, n) => p + (n - p) * a;
+    return { x: lerp(prev.x, next.x), y: lerp(prev.y, next.y), width: lerp(prev.width, next.width), angle: lerp(prev.angle, next.angle) };
+  }
+
+  const api = { landmarksToQuad, smoothQuad, headPose, smoothPose, clamp01 };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.FirebirdArMap = api;
 })(typeof window !== "undefined" ? window : this);

@@ -34,6 +34,10 @@ const defaults = {
   // (learning lets any host on the wire hijack the feedback stream).
   OSC_FEEDBACK_HOST: "127.0.0.1",
 
+  // Ableton Link — network tempo/beat sync (industry standard). Needs the optional
+  // native module `abletonlink` (npm install). Off by default; OSC clock still works.
+  ABLETON_LINK_ENABLED: false,
+
   // --- Clock authority ---
   // "ableton" = Ableton drives position/beat/bpm and Firebird never free-runs.
   // "internal" = Firebird runs its own timeline (rehearsal / no-Ableton mode).

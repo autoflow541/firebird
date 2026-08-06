@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebird AR Filter</title>
+<style>
+:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+html,body{ margin:0; height:100%; background:#000; overflow:hidden; font-family:Inter,Segoe UI,Arial,sans-serif; }
+#c{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
+#hat{ position:absolute; left:16px; bottom:16px; z-index:2; background:#D4A017; color:#141414; border:0; font-weight:800; letter-spacing:.1em; font-size:12px; padding:11px 16px; cursor:pointer; }
+#status{ position:absolute; right:16px; top:14px; z-index:2; color:#fff; font:11px "JetBrains Mono",Consolas,monospace; letter-spacing:.16em; opacity:.85; }
+</style></head>
+<body>
+  <canvas id="c"></canvas>
+  <button id="hat">🎩 HAT: ON</button>
+  <span id="status">AR starting…</span>
+  <script src="armap.js"></script>
+  <script src="ar-filter.js"></script>
+</body></html>

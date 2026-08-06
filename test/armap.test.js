@@ -50,4 +50,23 @@ test("smoothQuad eases toward the new quad", () => {
   near(s[0].x, 0.5); near(s[2].y, 0.5);
 });
 
+test("headPose: centre between ears, width = ear distance, angle = tilt", () => {
+  const a = new Array(9).fill({ x: 0.5, y: 0.5 });
+  a[7] = { x: 0.4, y: 0.3 }; a[8] = { x: 0.6, y: 0.3 }; // ears
+  const h = ar.headPose(a);
+  near(h.x, 0.5); near(h.y, 0.3); near(h.width, 0.2); near(h.angle, 0);
+});
+
+test("headPose tilt: raised right ear yields a positive angle; null if no ears", () => {
+  const a = new Array(9).fill({ x: 0.5, y: 0.5 });
+  a[7] = { x: 0.4, y: 0.3 }; a[8] = { x: 0.6, y: 0.4 };
+  assert.ok(ar.headPose(a).angle > 0, "tilt angle not positive");
+  assert.strictEqual(ar.headPose([{ x: 0, y: 0 }]), null);
+});
+
+test("smoothPose eases each field toward the new pose", () => {
+  const s = ar.smoothPose({ x: 0, y: 0, width: 0, angle: 0 }, { x: 1, y: 1, width: 1, angle: 1 }, 0.5);
+  near(s.x, 0.5); near(s.width, 0.5); near(s.angle, 0.5);
+});
+
 console.log(`\n${passed} tests passed.`);

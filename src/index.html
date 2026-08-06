@@ -62,6 +62,7 @@
         <button data-tab="visuals" class="active">VISUALS</button>
         <button data-tab="sound">SOUND</button>
         <button data-tab="ableton">ABLETON</button>
+        <button data-tab="midi">MIDI</button>
         <button data-tab="fixtures">FIXTURES</button>
         <button data-tab="stream">STREAM</button>
         <button data-tab="laser" id="laserTab" hidden>LASER</button>
@@ -84,14 +85,21 @@
       <div class="panel-head"><div><span>ABLETON LIVE</span><b>Show clock & cue automation</b></div><div id="abletonStatus" class="bridge-status">WAITING FOR OSC</div></div>
       <div class="ableton-grid">
         <div><span>OSC I/O</span><b>IN 42070 · OUT 42071</b></div>
+        <div><span>ABLETON LINK</span><b id="abletonLink">off</b></div>
         <div><span>CLOCK</span><b id="abletonClock">128 BPM</b></div>
         <div><span>LAST CUE</span><b id="abletonMessage">Waiting for Ableton</b></div>
         <div class="ableton-map"><span>SCENES</span><b>0 Intro · 1 Heavy · 2 Breakdown · 3 Ambient · 4 Blackout</b></div>
       </div>
     </section>
 
+    <section class="panel midi-panel tabpanel" data-tab="midi">
+      <div class="panel-head"><div><span>MIDI</span><b>Map a controller (Push 2, pads, knobs)</b></div><div id="midiState" class="bridge-status">MIDI…</div></div>
+      <div id="midiList" class="midi-list"></div>
+      <div class="midi-foot"><button id="midiClear" class="soft">CLEAR ALL</button><small>Click LEARN, then press a pad/key/knob. Bindings are saved. Blackout can only be ENGAGED via MIDI; laser is never MIDI-mappable.</small></div>
+    </section>
+
     <section class="panel fixtures tabpanel" data-tab="fixtures">
-      <div class="panel-head"><div><span>FIXTURES</span><b>Master live · fixture rows preview (Art-Net not wired)</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="arTrack" class="soft">AR TRACK ME</button><span id="arState" class="ar-state">AR OFF</span><button id="mapEditor" class="soft">PROJECTION MAP</button><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
+      <div class="panel-head"><div><span>FIXTURES</span><b>Master live · fixture rows preview (Art-Net not wired)</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="arTrack" class="soft">AR TRACK ME</button><button id="arFilter" class="soft">AR FILTER 🎩</button><span id="arState" class="ar-state">AR OFF</span><button id="mapEditor" class="soft">PROJECTION MAP</button><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
       <div class="fixture-grid" id="fixtureGrid"></div>
     </section>
 
@@ -143,6 +151,7 @@
   </main>
   <script src="soundmap.js"></script>
   <script src="sound.js"></script>
+  <script src="midi.js"></script>
   <script src="armap.js"></script>
   <script src="ar.js"></script>
   <script src="renderer.js"></script>
