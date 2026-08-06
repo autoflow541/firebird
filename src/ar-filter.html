@@ -11,6 +11,12 @@ html,body{ margin:0; height:100%; background:#000; overflow:hidden; font-family:
   <canvas id="c"></canvas>
   <button id="hat">🎩 HAT: ON</button>
   <span id="status">AR starting…</span>
+  <script>
+    // Use the locally-vendored MediaPipe (offline, no CDN). Falls back to CDN in
+    // ar-filter.js only if these files aren't present.
+    window.FIREBIRD_MP_BASE = "/vendor/mediapipe";
+    window.FIREBIRD_MP_MODEL = "/vendor/mediapipe/pose_landmarker_lite.task";
+  </script>
   <script src="armap.js"></script>
   <script src="ar-filter.js"></script>
 </body></html>

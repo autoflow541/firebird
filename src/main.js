@@ -524,6 +524,14 @@ function startControlServer() {
     if (url.pathname === "/ar" || url.pathname === "/ar-filter.html") return serveFile(response, path.join(__dirname, "ar-filter.html"), "text/html");
     if (url.pathname === "/ar-filter.js") return serveFile(response, path.join(__dirname, "ar-filter.js"), "text/javascript");
     if (url.pathname === "/armap.js") return serveFile(response, path.join(__dirname, "armap.js"), "text/javascript");
+    // Vendored assets (MediaPipe bundle/wasm/model) — served with correct MIME so
+    // the AR filter runs locally/offline over HTTP (no CDN, no file:// CORS).
+    if (url.pathname.startsWith("/vendor/")) {
+      const rel = url.pathname.replace(/\.\.+/g, "").replace(/^\/+/, "");
+      const ext = path.extname(rel);
+      const mime = { ".mjs": "text/javascript", ".js": "text/javascript", ".wasm": "application/wasm", ".task": "application/octet-stream", ".data": "application/octet-stream", ".map": "application/json" }[ext] || "application/octet-stream";
+      return serveFile(response, path.join(__dirname, rel), mime);
+    }
     if (url.pathname === "/remote.js") return serveFile(response, path.join(__dirname, "remote.js"), "text/javascript");
     if (url.pathname === "/styles.css") return serveFile(response, path.join(__dirname, "styles.css"), "text/css");
     return serveFile(response, path.join(__dirname, "remote.html"), "text/html");
@@ -588,7 +596,8 @@ function openArFilter() {
     width: 1000, height: 640, backgroundColor: "#000000",
     webPreferences: { preload: path.join(__dirname, "preload.js") }
   });
-  arFilterWindow.loadFile(path.join(__dirname, "ar-filter.html"));
+  // Load over HTTP (not file://) so MediaPipe can fetch the vendored wasm/model.
+  arFilterWindow.loadURL(`http://localhost:${config.CONTROL_PORT}/ar`);
   arFilterWindow.on("closed", () => (arFilterWindow = null));
 }
 

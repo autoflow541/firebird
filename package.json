@@ -6,10 +6,13 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/engine.test.js",
-    "check": "node --check src/main.js && node --check src/engine.js && node --check src/config.js && node --check src/renderer.js && node --check src/remote.js && node --check src/projector.js"
+    "postinstall": "node scripts/vendor-mediapipe.js",
+    "vendor:mediapipe": "node scripts/vendor-mediapipe.js",
+    "test": "node test/engine.test.js && node test/warp.test.js && node test/soundmap.test.js && node test/armap.test.js",
+    "check": "node --check src/main.js && node --check src/engine.js && node --check src/config.js && node --check src/renderer.js && node --check src/remote.js && node --check src/projector.js && node --check src/sound.js && node --check src/midi.js && node --check src/link.js && node --check src/obs.js && node --check src/ar.js && node --check src/ar-filter.js && node --check src/armap.js && node --check src/warp.js"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "obs-websocket-js": "^5.0.6"
   },
   "optionalDependencies": {
