@@ -283,13 +283,14 @@ function tickInternalClock(state, dt) {
 //                   gated in hardware by the physical interlock)
 function deriveOutputs(state) {
   const blackout = state.blackout;
+  const master = blackout ? 0 : state.master / 100; // MASTER scales intensity 0..1
   const channels = {};
   channels[BLAIZE_BLACKOUT_CH] = blackout ? 1 : 0;
   channels[BLAIZE_MULTICOLOR_CH] = state.blaize.multicolor ? 1 : 0;
   channels[BLAIZE_CH.speed] = state.blaize.speed;
   channels[BLAIZE_CH.size] = state.blaize.size;
-  // Force visual brightness to 0 under blackout (belt-and-suspenders with ch37).
-  channels[BLAIZE_CH.brightness] = blackout ? 0 : state.blaize.brightness;
+  // Brightness is scaled by MASTER, then forced to 0 under blackout.
+  channels[BLAIZE_CH.brightness] = Math.round(state.blaize.brightness * master);
   channels[BLAIZE_CH.strobe] = blackout ? 0 : state.blaize.strobe;
   channels[BLAIZE_CH.shading] = state.blaize.shading;
 
@@ -308,8 +309,8 @@ function deriveOutputs(state) {
       const emit = !blackout && state.laser.enabled && state.laser.armed &&
         state.laser.output !== "none" &&
         (!state.laser.requireInterlock || state.laser.interlock);
-      // fx only leaves the gate when actually emitting — blackout/disarm -> 0.
-      return { emit, output: state.laser.output, fx: emit ? state.laser.fx : 0 };
+      // fx only leaves the gate when emitting, and is scaled by MASTER too.
+      return { emit, output: state.laser.output, fx: emit ? Math.round(state.laser.fx * master) : 0 };
     })()
   };
 }

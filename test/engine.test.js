@@ -157,6 +157,7 @@ test("losing the interlock disarms the laser", () => {
 
 test("sound drives visuals + modulates an ARMED laser, but never arms it or blacks out", () => {
   const s = engine.initialState();
+  s.master = 100; // isolate fx from master scaling for this assertion
   s.laser.enabled = true; s.laser.requireInterlock = false; s.laser.output = "dmx";
   // Sound CAN drive a visual.
   engine.applyCommand(s, { action: "visual", key: "brightness", value: 70, source: "sound" }, cfg);
@@ -181,6 +182,17 @@ test("sound drives visuals + modulates an ARMED laser, but never arms it or blac
   const out = engine.deriveOutputs(s);
   assert.strictEqual(out.laser.emit, false, "blackout did not kill the beam");
   assert.strictEqual(out.laser.fx, 0, "blackout did not zero laser fx");
+});
+
+test("MASTER scales Blaize brightness and armed-laser fx", () => {
+  const s = engine.initialState();
+  s.blaize.brightness = 100; s.master = 50;
+  assert.strictEqual(engine.deriveOutputs(s).blaizeChannels[engine.BLAIZE_CH.brightness], 50, "master did not scale brightness");
+  s.laser.enabled = true; s.laser.requireInterlock = false; s.laser.output = "dmx"; s.laser.fx = 100;
+  engine.applyCommand(s, { action: "laser", key: "arm", value: true, source: "local" }, cfg);
+  assert.strictEqual(engine.deriveOutputs(s).laser.fx, 50, "master did not scale laser fx");
+  s.master = 0;
+  assert.strictEqual(engine.deriveOutputs(s).blaizeChannels[engine.BLAIZE_CH.brightness], 0, "master 0 did not zero brightness");
 });
 
 test("Ableton clock: internal timeline does not free-run", () => {
