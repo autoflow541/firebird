@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, session } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, session, dialog } = require("electron");
 const http = require("http");
 const os = require("os");
 const path = require("path");
@@ -597,6 +597,30 @@ ipcMain.on("ar:quad", (_, quad) => {
     if (s.track) { s.corners = quad.map((c) => ({ x: c.x, y: c.y })); changed = true; }
   }
   if (changed) pushMapping();
+});
+ipcMain.handle("show:save", async () => {
+  const res = await dialog.showSaveDialog(controlWindow, {
+    title: "Save show", defaultPath: path.join(__dirname, "..", "shows", `${state.song || "show"}.json`),
+    filters: [{ name: "Firebird Show", extensions: ["json"] }]
+  });
+  if (res.canceled || !res.filePath) return null;
+  try {
+    fs.mkdirSync(path.dirname(res.filePath), { recursive: true });
+    fs.writeFileSync(res.filePath, JSON.stringify(engine.exportShow(state), null, 2));
+    return path.basename(res.filePath);
+  } catch (error) { return { error: error.message }; }
+});
+ipcMain.handle("show:load", async () => {
+  const res = await dialog.showOpenDialog(controlWindow, {
+    title: "Load show", properties: ["openFile"], filters: [{ name: "Firebird Show", extensions: ["json"] }]
+  });
+  if (res.canceled || !res.filePaths[0]) return null;
+  try {
+    engine.loadShow(state, JSON.parse(fs.readFileSync(res.filePaths[0], "utf8")));
+    pushOutputs();
+    broadcast();
+    return path.basename(res.filePaths[0]);
+  } catch (error) { return { error: error.message }; }
 });
 ipcMain.on("sound:command", (_, cmd) => dispatch({ ...cmd, source: "sound" }));
 ipcMain.on("obs:command", (_, cmd) => handleObs(cmd));

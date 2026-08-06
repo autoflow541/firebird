@@ -51,6 +51,13 @@ next to `package.json` (see `firebird.config.example.json`) or set
 `BLAIZE_HOST`, `BLAIZE_PORT`, `LASER_ENABLED`, `ALLOW_OSC_BLACKOUT_RELEASE`,
 `ALLOW_REMOTE_BLACKOUT_RELEASE`. See `src/config.js` for the full list + comments.
 
+## Show files
+
+**SAVE** / **LOAD** in the Song Timeline panel write/read a show as JSON (default
+`shows/`): song, tempo, the cue list, and the fixture patch. The timeline is
+data-driven, so loading a show redraws it. Loading a show is a setup action — it
+**never** changes safety state (blackout, laser, master stay as they are).
+
 ## Blaize visual engine
 
 The original `Blaize_V3_PWFB` source is bundled under `vendor/Blaize_V3_PWFB`. Run

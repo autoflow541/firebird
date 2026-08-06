@@ -30,7 +30,10 @@ function render(next) {
     input.nextElementSibling.textContent = `${input.value}%`;
   });
   document.querySelector("#multicolor").classList.toggle("active", next.blaize.multicolor);
-  document.querySelector("#playhead").style.left = `${Math.min(100, next.elapsed / 104 * 100)}%`;
+  const total = (next.cues[next.cues.length - 1] && next.cues[next.cues.length - 1].time) || 104;
+  document.querySelector("#playhead").style.left = `${Math.min(100, next.elapsed / total * 100)}%`;
+  document.querySelector("#showName").textContent = next.song;
+  renderTimeline(next.cues, total);
   document.querySelectorAll("[data-scene]").forEach((button) => button.classList.toggle("active", button.dataset.scene === next.scene));
   document.querySelectorAll("#beats i").forEach((beat, index) => beat.classList.toggle("on", index + 1 === next.beat && next.playing));
   document.querySelectorAll(".cue").forEach((cue, index) => cue.classList.toggle("current", index === next.cueIndex));
@@ -65,9 +68,25 @@ function renderLaser(laser) {
   arm.disabled = !laser.armed && !armReady; // can always DISARM; can only ARM when ready
 }
 
-document.querySelector("#cueList").innerHTML = [
-  ["00:00", "Logo / low haze"], ["00:18", "Full band entrance"], ["00:48", "Half-time pulse"], ["01:16", "Wide violet wash"], ["01:44", "End hit"]
-].map(([time, note]) => `<div class="cue"><b>${time}</b><small>${note}</small></div>`).join("");
+// Data-driven timeline + cue list, rebuilt only when the cues change (e.g. after
+// loading a show). fmtClock -> MM:SS.
+let cuesSig = "";
+const fmtClock = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+function renderTimeline(cues, total) {
+  const sig = JSON.stringify(cues);
+  if (sig === cuesSig) return;
+  cuesSig = sig;
+  document.querySelector("#ruler").innerHTML = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span>${fmtClock(total * f)}</span>`).join("");
+  document.querySelector("#timelineBlocks").innerHTML = cues.map((c, i) => {
+    const nextT = cues[i + 1] ? cues[i + 1].time : total;
+    const w = Math.max(0, (nextT - c.time) / total * 100);
+    return w > 0.1 ? `<div class="block ${c.scene.toLowerCase()}" style="width:${w}%">${c.scene}</div>` : "";
+  }).join("");
+  document.querySelector("#cueList").innerHTML = cues.map((c) => `<div class="cue"><b>${fmtClock(c.time)}</b><small>${c.note || c.scene}</small></div>`).join("");
+}
+
+document.querySelector("#showSave").onclick = async () => { await window.showControl.saveShow(); };
+document.querySelector("#showLoad").onclick = async () => { await window.showControl.loadShow(); };
 
 document.querySelector("#scenes").addEventListener("click", (event) => {
   const button = event.target.closest("[data-scene]");

@@ -195,6 +195,37 @@ test("MASTER scales Blaize brightness and armed-laser fx", () => {
   assert.strictEqual(engine.deriveOutputs(s).blaizeChannels[engine.BLAIZE_CH.brightness], 0, "master 0 did not zero brightness");
 });
 
+test("show export/load round-trips cues + song + fixtures", () => {
+  const s = engine.initialState();
+  s.song = "Neon Wolves"; s.bpm = 140;
+  const show = engine.exportShow(s);
+  const s2 = engine.initialState();
+  engine.loadShow(s2, show);
+  assert.strictEqual(s2.song, "Neon Wolves");
+  assert.strictEqual(s2.bpm, 140);
+  assert.deepStrictEqual(s2.cues.map((c) => c.scene), s.cues.map((c) => c.scene));
+  assert.strictEqual(s2.fixtures.length, s.fixtures.length);
+});
+
+test("loadShow sanitizes cues (sorted, clamped bpm) and resets the playhead", () => {
+  const s = engine.initialState();
+  s.elapsed = 50; s.cueIndex = 3;
+  engine.loadShow(s, { bpm: 9999, cues: [{ time: 40, scene: "ambient" }, { time: 0, scene: "intro" }] });
+  assert.strictEqual(s.bpm, 300, "bpm not clamped");
+  assert.deepStrictEqual(s.cues.map((c) => c.time), [0, 40], "cues not sorted");
+  assert.strictEqual(s.cues[0].scene, "INTRO", "scene not upper-cased");
+  assert.strictEqual(s.elapsed, 0); assert.strictEqual(s.cueIndex, 0);
+});
+
+test("SAFETY: loading a show never disturbs blackout or the laser", () => {
+  const s = engine.initialState();
+  s.laser.enabled = true; s.laser.requireInterlock = false; s.laser.output = "dmx";
+  engine.applyCommand(s, { action: "blackout", value: true, source: "local" }, cfg);
+  engine.loadShow(s, { song: "X", cues: [{ time: 0, scene: "HEAVY" }] });
+  assert.strictEqual(s.blackout, true, "loading a show released blackout");
+  assert.strictEqual(engine.deriveOutputs(s).laser.emit, false, "laser emitted after show load under blackout");
+});
+
 test("Ableton clock: internal timeline does not free-run", () => {
   const s = engine.initialState(); // clockSource defaults to "ableton"
   s.playing = true;

@@ -10,6 +10,8 @@ firebird.mapping.json
 mapping-photos/
 # Saved screen captures
 captures/
+# Saved show files (per-gig, user data)
+shows/
 # OS / editor cruft
 .DS_Store
 Thumbs.db

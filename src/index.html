@@ -39,10 +39,10 @@
 
     <div class="workspace">
       <section class="panel timeline-panel">
-        <div class="panel-head"><div><span>SONG TIMELINE</span><b>Firebird · Show 01</b></div><div class="cue-actions"><button id="cueBack" class="soft">← BACK</button><button id="cueGo" class="soft cue-go">GO NEXT →</button></div></div>
-        <div class="ruler"><span>00:00</span><span>00:26</span><span>00:52</span><span>01:18</span><span>01:44</span></div>
+        <div class="panel-head"><div><span>SONG TIMELINE</span><b id="showName">Firebird</b></div><div class="cue-actions"><button id="showSave" class="soft">SAVE</button><button id="showLoad" class="soft">LOAD</button><button id="cueBack" class="soft">← BACK</button><button id="cueGo" class="soft cue-go">GO NEXT →</button></div></div>
+        <div class="ruler" id="ruler"></div>
         <div class="timeline" id="timeline">
-          <div class="block intro" style="width:17.3%">INTRO</div><div class="block heavy" style="width:28.8%">HEAVY</div><div class="block breakdown" style="width:26.9%">BREAKDOWN</div><div class="block ambient" style="width:27%">AMBIENT</div>
+          <div id="timelineBlocks"></div>
           <div class="playhead" id="playhead"></div>
         </div>
         <div class="cues" id="cueList"></div>

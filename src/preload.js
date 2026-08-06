@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld("showControl", {
   onState: (callback) => ipcRenderer.on("show:state", (_, state) => callback(state)),
   onRemoteAddress: (callback) => ipcRenderer.on("remote:address", (_, address) => callback(address)),
   getState: () => ipcRenderer.invoke("show:get"),
+  saveShow: () => ipcRenderer.invoke("show:save"),
+  loadShow: () => ipcRenderer.invoke("show:load"),
   // Projection mapping (projector receives; operator/editor sets).
   onMapping: (callback) => ipcRenderer.on("show:mapping", (_, mapping) => callback(mapping)),
   setMapping: (mapping) => ipcRenderer.send("mapping:set", mapping),

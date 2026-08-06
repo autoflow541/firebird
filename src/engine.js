@@ -315,7 +315,43 @@ function deriveOutputs(state) {
   };
 }
 
+// --- Show files -----------------------------------------------------------
+// A "show" is the per-gig editable data: song, tempo, the cue list, and the
+// fixture patch. Saving/loading a show NEVER changes safety state (blackout,
+// laser, master) — loading a show is a setup action, not a performance one.
+function exportShow(state) {
+  return {
+    version: 1,
+    song: state.song,
+    bpm: state.bpm,
+    cues: state.cues.map((c) => ({ time: c.time, scene: c.scene, note: c.note })),
+    fixtures: state.fixtures.map((f) => ({ ...f }))
+  };
+}
+
+function loadShow(state, show) {
+  if (!show || typeof show !== "object") return false;
+  if (show.song != null) state.song = String(show.song);
+  if (show.bpm != null) state.bpm = clamp(Number(show.bpm) || state.bpm, 30, 300);
+  if (Array.isArray(show.cues)) {
+    state.cues = show.cues
+      .map((c) => ({ time: Math.max(0, Number(c.time) || 0), scene: String(c.scene || "INTRO").toUpperCase(), note: String(c.note || "") }))
+      .sort((a, b) => a.time - b.time);
+  }
+  if (Array.isArray(show.fixtures)) {
+    state.fixtures = show.fixtures.map((f) => ({
+      id: String(f.id), name: String(f.name || f.id), type: String(f.type || ""),
+      level: clamp(Number(f.level) || 0, 0, 100), color: String(f.color || "#ffffff"), locked: !!f.locked
+    }));
+  }
+  state.cueIndex = 0;
+  state.elapsed = 0;
+  // Deliberately untouched: blackout, laser, master, output selections.
+  return true;
+}
+
 module.exports = {
   SCENES, PRESET_BY_SCENE, VISUAL_LIMITS, BLAIZE_CH, BLAIZE_MULTICOLOR_CH, BLAIZE_BLACKOUT_CH,
-  initialState, applyCommand, tickInternalClock, deriveOutputs, canRelease, clamp
+  initialState, applyCommand, tickInternalClock, deriveOutputs, canRelease, clamp,
+  exportShow, loadShow
 };
