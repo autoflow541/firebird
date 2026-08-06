@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firebird Show Control — free live show software | Auto-Flow</title>
+<meta name="description" content="Firebird Show Control: free, local-first live show software for bands, DJs and streamers. Ableton-clocked visuals, projection mapping, laser, streaming, sound-reactive — with master blackout safety and a phone remote. Windows, portable, no install.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#111111; --paper:#ffffff; --yellow:#D4A017; --yellow-deep:#b8860b;
+  --accent:#7A5E00; --t1:#141414; --t2:#3a3a3a; --t3:#5f5f5f;
+  --radius:2px; --radius-lg:3px;
+  --mono:"JetBrains Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:"Atkinson Hyperlegible",system-ui,Arial,sans-serif;color:var(--t1);background:var(--paper);line-height:1.55}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--yellow)}
+.btn{display:inline-block;background:var(--yellow);color:var(--t1);border:1.5px solid var(--accent);font-weight:700;letter-spacing:.02em;padding:15px 26px;border-radius:var(--radius);text-decoration:none}
+.btn:hover{background:var(--yellow-deep)}
+.btn.big{font-size:19px;padding:18px 34px}
+
+/* Hero (black poster) */
+.hero{background:var(--ink);color:#fff;padding:26px 0 64px;position:relative;overflow:hidden}
+.hero :focus-visible{outline-color:#fff}
+.hero .btn{border-color:var(--t1)}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.06em}
+.mark{width:30px;height:34px;display:grid;place-items:center;background:var(--yellow);color:var(--ink);font-weight:800;font-size:20px;clip-path:polygon(20% 0,100% 0,78% 43%,100% 43%,15% 100%,38% 55%,0 55%)}
+.nav a{color:#d8d8d6;text-decoration:none;font-size:14px}
+.hero h1{font-size:clamp(42px,8vw,88px);line-height:.98;letter-spacing:-.03em;font-weight:700;text-transform:uppercase;margin:22px 0 16px}
+.hero p.lead{font-size:clamp(17px,2.4vw,22px);color:#d8d8d6;max-width:44ch;margin-bottom:30px}
+.cta-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.cta-note{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:#b8b8b6}
+.marquee{margin-top:44px;font-family:var(--mono);font-size:12px;letter-spacing:.28em;color:var(--yellow);text-transform:uppercase;opacity:.85}
+
+/* Sections */
+section{padding:64px 0;border-bottom:1px solid #eee}
+h2{font-size:clamp(26px,4vw,38px);text-transform:uppercase;letter-spacing:-.01em;margin-bottom:8px}
+.sub{color:var(--t2);max-width:60ch;margin-bottom:34px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.card{border:1px solid #e6e6e6;border-left:3px solid var(--yellow);padding:22px;border-radius:var(--radius)}
+.card h3{font-size:17px;margin-bottom:8px}
+.card p{color:var(--t2);font-size:15px}
+.card .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+
+/* Safety band */
+.safety{background:#fbf6e8;border:1px solid #ecdcae;border-left:4px solid var(--accent);padding:26px;border-radius:var(--radius-lg)}
+.safety h3{text-transform:uppercase;letter-spacing:.04em;font-size:15px;margin-bottom:10px;color:var(--accent)}
+.safety p{color:var(--t2);font-size:15px}
+
+/* Download */
+.dl{background:var(--ink);color:#fff}
+.dl h2{color:#fff}
+.dl .sub{color:#d8d8d6}
+.reqs{display:flex;gap:30px;flex-wrap:wrap;margin-top:26px;font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:#d8d8d6}
+.reqs b{color:#fff}
+.smartscreen{margin-top:22px;font-size:14px;color:#b8b8b6;max-width:64ch}
+.smartscreen b{color:var(--yellow)}
+
+footer{padding:40px 0;color:var(--t3);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav" aria-label="Primary">
+      <span class="brand"><span class="mark" aria-hidden="true">F</span> FIREBIRD</span>
+      <span><a href="#features">Features</a> &nbsp; <a href="#download">Download</a> &nbsp; <a href="https://github.com/autoflow541/firebird">GitHub&nbsp;↗</a></span>
+    </nav>
+    <p class="eyebrow">Auto-Flow · Live Show Control</p>
+    <h1>Firebird<br>Show Control</h1>
+    <p class="lead">The free, local-first show conductor for bands, DJs &amp; live streamers. Ableton is your clock, your phone is your remote, and master blackout is sacred.</p>
+    <div class="cta-row">
+      <a class="btn big" href="#download">Download for Windows</a>
+      <span class="cta-note">Free · Portable · No install</span>
+    </div>
+    <p class="marquee" aria-hidden="true">Ableton clock · Blackout safety · Blaize &amp; Kinect visuals · Projection mapping · Laser · OBS · Sound-reactive · Phone remote · MIDI</p>
+  </div>
+</header>
+
+<section id="what">
+  <div class="wrap">
+    <p class="eyebrow">What it is</p>
+    <h2>One console for the whole act</h2>
+    <p class="sub">Firebird runs your visuals, projection mapping, lasers and stream from one place — and it keeps running if the internet drops. It doesn't replace Resolume or Pangolin; it conducts your show and safely ties your tools together, synced to Ableton, with a phone remote for when your hands are full.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <p class="eyebrow">Features</p>
+    <h2>Built for a live room</h2>
+    <p class="sub">Everything below is on one screen, always a click away — with the controls that matter most kept front and centre.</p>
+    <div class="grid">
+      <div class="card"><span class="k">Clock</span><h3>Ableton-synced</h3><p>Ableton Live is the show clock over OSC and Ableton Link. No competing timeline.</p></div>
+      <div class="card"><span class="k">Safety</span><h3>Master blackout</h3><p>A latching blackout that overrides scenes, timelines, effects and remote commands — instantly.</p></div>
+      <div class="card"><span class="k">Visuals</span><h3>Blaize + Kinect FX</h3><p>32 Blaize presets over TCP, plus a Kinect depth-FX layer with motion tracers and hypercolor.</p></div>
+      <div class="card"><span class="k">Mapping</span><h3>Projection mapping</h3><p>Photo-from-the-projector workflow: draw surfaces, corner-pin your visuals onto real walls and set pieces.</p></div>
+      <div class="card"><span class="k">Laser</span><h3>Safety-gated laser</h3><p>ILDA / ShowNET / DMX output behind a hardware-interlock model. Blackout always kills the beam.</p></div>
+      <div class="card"><span class="k">Stream</span><h3>OBS integration</h3><p>A browser-source background/overlay for OBS, plus start/stop/scene control from the console or a cue.</p></div>
+      <div class="card"><span class="k">Reactive</span><h3>Sound-reactive</h3><p>The room's audio drives your visuals — and an armed laser — live, with tunable sensitivity.</p></div>
+      <div class="card"><span class="k">Remote</span><h3>Phone remote</h3><p>Open a token-protected link on any phone on the Wi-Fi. Big scenes, transport, and a blackout you can always hit.</p></div>
+      <div class="card"><span class="k">Control</span><h3>MIDI &amp; AR</h3><p>MIDI-learn any pad or knob (Push 2 ready), plus a webcam AR filter for a bit of fun on the screen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="safety">
+      <h3>A note on safety</h3>
+      <p>Firebird is built safety-first: master blackout latches and overrides everything, and laser output stays disabled until a hardware interlock and key are in place — software is never the only thing between "off" and "firing." Lasers are powerful; a Class 3B/4 laser needs a physical interlock, eye protection, and (for audience scanning in the US) an FDA/CDRH variance and a laser-safety officer. Use responsibly.</p>
+    </div>
+  </div>
+</section>
+
+<section id="download" class="dl">
+  <div class="wrap">
+    <p class="eyebrow">Download</p>
+    <h2>Get Firebird</h2>
+    <p class="sub">Free and portable — download, unzip nothing, just run. No installer, no account, nothing sent to a server.</p>
+    <a class="btn big" href="https://github.com/autoflow541/firebird/releases/latest">Download the latest build ↗</a>
+    <div class="reqs">
+      <span><b>OS</b> &nbsp;Windows 10 / 11 (64-bit)</span>
+      <span><b>Type</b> &nbsp;Portable .exe — no install</span>
+      <span><b>Price</b> &nbsp;Free &amp; open source</span>
+    </div>
+    <p class="smartscreen">The build is unsigned, so Windows SmartScreen may show <b>"Windows protected your PC."</b> That's expected for indie software — click <b>More info → Run anyway</b>. Prefer to build it yourself? The full source is on <a href="https://github.com/autoflow541/firebird" style="color:#fff">GitHub</a>.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>© Auto-Flow Automations — Portland, OR</span>
+  <span><a href="https://auto-flow.co">auto-flow.co</a> · <a href="https://github.com/autoflow541/firebird">GitHub</a></span>
+</footer>
+
+</body>
+</html>
