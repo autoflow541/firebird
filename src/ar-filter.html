@@ -6,11 +6,13 @@ html,body{ margin:0; height:100%; background:#000; overflow:hidden; font-family:
 #c{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
 #hat{ position:absolute; left:16px; bottom:16px; z-index:2; background:#D4A017; color:#141414; border:0; font-weight:800; letter-spacing:.1em; font-size:12px; padding:11px 16px; cursor:pointer; }
 #status{ position:absolute; right:16px; top:14px; z-index:2; color:#fff; font:11px "JetBrains Mono",Consolas,monospace; letter-spacing:.16em; opacity:.85; }
+#start{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:3; background:#D4A017; color:#141414; border:0; font-weight:800; letter-spacing:.12em; font-size:16px; padding:18px 30px; cursor:pointer; }
 </style></head>
 <body>
   <canvas id="c"></canvas>
-  <button id="hat">🎩 HAT: ON</button>
-  <span id="status">AR starting…</span>
+  <button id="start">▶ START CAMERA</button>
+  <button id="hat" style="display:none">🎩 HAT: ON</button>
+  <span id="status">Click START to enable the camera</span>
   <script>
     // Use the locally-vendored MediaPipe (offline, no CDN). Falls back to CDN in
     // ar-filter.js only if these files aren't present.

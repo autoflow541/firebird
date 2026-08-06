@@ -103,5 +103,7 @@
   document.getElementById("hat").onclick = toggleHat;
   window.addEventListener("keydown", (e) => { if (e.key === "h" || e.key === "H") toggleHat(); });
 
-  start();
+  // Camera is requested ONLY when you click START — never automatically on open.
+  const startBtn = document.getElementById("start");
+  startBtn.onclick = () => { startBtn.style.display = "none"; document.getElementById("hat").style.display = ""; start(); };
 })();
