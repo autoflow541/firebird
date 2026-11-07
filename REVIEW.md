@@ -204,7 +204,7 @@ The only cloud dependency is a static marketing page. The show never waits on it
 1. **[FIXED]** Latching blackout + output-boundary gate.
 2. **[FIXED]** Laser interlock model (software can never arm alone).
 3. **[FIXED]** Token auth + DNS-rebind protection + loopback OSC.
-4. **[TODO]** Strobe max-Hz clamp + global "no strobe."
+4. **[PARTIAL]** Strobe max-Hz clamp + global "no strobe." Done for DMX audience lights (flash-to-beat capped at 3 Hz, own off switch, `src/dmx.js`). Still TODO: Blaize strobe channel and any flashing clips/effects in the clip deck.
 5. **[TODO]** DMX/Art-Net output adapter behind `deriveOutputs` (start with a
    sACN/Art-Net library, all-zero on blackout, tested on a single dimmer).
 

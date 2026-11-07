@@ -53,6 +53,7 @@
     if (onset) lastOnset = now;
 
     meters(bass, mid, high, level);
+    publishFeatures(level, bass, mid, high, onset, now);
 
     // Emit at ~20 fps, only values that changed (keeps the bus quiet).
     if (now - lastSend >= 50) {
@@ -64,6 +65,21 @@
       }
     }
     raf = requestAnimationFrame(analyse);
+  }
+
+  // Feed the clip-deck compositor (operator preview via a window event, projector
+  // via IPC). Byte spectrum data sits high for music, so shape it to use the full
+  // 0..1 range — shaders then see real dynamics. Visual-only; never a control path.
+  const shape = (v) => Math.max(0, Math.min(1, (v - 0.3) / 0.6));
+  let lastAudioSend = 0;
+  function publishFeatures(level, bass, mid, high, onset, now) {
+    const bands = new Array(16);
+    for (let i = 0; i < 16; i++) {
+      bands[i] = shape(bandAvg(freqBuf, 40 * Math.pow(350, i / 16), 40 * Math.pow(350, (i + 1) / 16)));
+    }
+    const f = { level: shape(level + 0.25), bass: shape(bass), mid: shape(mid), high: shape(high), onset, bands };
+    window.dispatchEvent(new CustomEvent("firebird:audio", { detail: f }));
+    if (now - lastAudioSend >= 33 && window.showControl.audio) { lastAudioSend = now; window.showControl.audio(f); }
   }
 
   function meters(b, m, h, l) {
@@ -105,6 +121,9 @@
     $("#soundToggle").classList.remove("active");
     document.querySelector('#tabstrip [data-tab="sound"]')?.classList.remove("live");
     meters(0, 0, 0, 0);
+    const silent = { level: 0, bass: 0, mid: 0, high: 0, onset: false, bands: new Array(16).fill(0) };
+    window.dispatchEvent(new CustomEvent("firebird:audio", { detail: silent }));
+    if (window.showControl.audio) window.showControl.audio(silent);
   }
 
   async function populateDevices() {

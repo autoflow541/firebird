@@ -18,3 +18,6 @@ shows/
 .DS_Store
 Thumbs.db
 *.log
+# Per-venue clip deck (layers/clips, may reference local media paths)
+firebird.deck.json
+firebird.dmx.json

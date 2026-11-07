@@ -96,6 +96,14 @@ const defaults = {
   // dimmer/intensity channel from its DMX chart so sound modulates the beam.
   LASER_DMX_INTENSITY_CH: 0,
 
+  // --- Audience lights (conventional DMX fixtures) ---
+  // "none" | "enttec" (ENTTEC DMX USB Pro on a COM port) | "artnet" (any Art-Net node,
+  // uses ARTNET_HOST / ARTNET_UNIVERSE above). Also settable in the FIXTURES tab, which
+  // saves firebird.dmx.json and overrides these. DMX_PORT "" = auto-detect the ENTTEC.
+  DMX_OUTPUT: "none",
+  DMX_PORT: "",
+  DMX_FPS: 30,
+
   // ILDA: Firebird cannot emit analog ILDA directly — it forwards arm/blank to an
   // ILDA DAC or laser software (Ether Dream / Helios / Pangolin Beyond, …) over
   // OSC. Point this at that bridge. Final wiring depends on which DAC you use.

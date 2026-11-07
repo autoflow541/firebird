@@ -11,6 +11,10 @@ const { config } = require("./config");
 const engine = require("./engine");
 const obs = require("./obs");
 const link = require("./link");
+const clips = require("./clips");
+const shaders = require("./shaders");
+const dmx = require("./dmx");
+const dmxoutLib = require("./dmxout");
 
 let controlWindow;
 let projectorWindow;
@@ -40,6 +44,46 @@ state.laser.output = ["none", "dmx", "ilda", "shownet"].includes(config.LASER_OU
 
 let artnetSocket; // created at boot for the DMX laser transport
 
+// ---------------------------------------------------------------------------
+// DMX for the audience lights (ENTTEC DMX USB Pro or Art-Net). dmx.js builds the
+// frame (pure, unit-tested); dmxout.js moves the bytes. Output choice persists in
+// firebird.dmx.json so you set it once per machine.
+// ---------------------------------------------------------------------------
+const dmxOut = dmxoutLib.create({ universe: config.ARTNET_UNIVERSE });
+const beatClock = dmx.makeBeatClock();
+const audioNow = { level: 0, bass: 0, mid: 0, high: 0 };
+const audioTarget = { level: 0, bass: 0, mid: 0, high: 0, at: 0 };
+let identify = null; // { id, until }
+let lastDmxTick = Date.now();
+
+function dmxFile() { return path.join(__dirname, "..", "firebird.dmx.json"); }
+function loadDmxPrefs() {
+  try { if (fs.existsSync(dmxFile())) return JSON.parse(fs.readFileSync(dmxFile(), "utf8")); } catch {}
+  return { output: config.DMX_OUTPUT, port: config.DMX_PORT };
+}
+function saveDmxPrefs(prefs) { try { fs.writeFileSync(dmxFile(), JSON.stringify(prefs, null, 2)); } catch (e) { console.error("[dmx] save failed:", e.message); } }
+const dmxActive = () => state.dmx.output !== "none";
+
+function dmxTick() {
+  const now = Date.now();
+  const dt = Math.min(0.2, (now - lastDmxTick) / 1000);
+  lastDmxTick = now;
+  const beatPos = beatClock.tick(dt, state.bpm, state.beat);
+  // smooth audio: fast attack, slower release; fall to silence if the feed stops
+  const fresh = now - audioTarget.at < 600;
+  const att = 1 - Math.exp(-dt * 30), rel = 1 - Math.exp(-dt * 7);
+  for (const k of ["level", "bass", "mid", "high"]) {
+    const t = fresh ? audioTarget[k] : 0;
+    audioNow[k] += (t - audioNow[k]) * (t > audioNow[k] ? att : rel);
+  }
+  if (!dmxActive()) return;
+  const out = engine.deriveOutputs(state);
+  const frame = dmx.buildFrame(state, out, {
+    audio: audioNow, beatPos, bpm: state.bpm, flash: state.dmx.flash, identify, now, cfg: config
+  });
+  dmxOut.send(frame);
+}
+
 // Last values actually sent to Blaize, so we only transmit deltas — except the
 // blackout channel, which we RE-ASSERT every heartbeat so a single dropped TCP
 // write can never leave the rig lit while blackout is engaged.
@@ -62,6 +106,47 @@ function saveMapping() {
   catch (error) { console.error("[mapping] save failed:", error.message); }
 }
 function pushMapping() { projectorWindow?.webContents.send("show:mapping", mapping); }
+
+// Clip deck (layers x columns rendered by the projector's WebGL compositor). Loaded
+// from firebird.deck.json if present, else a starter deck. Purely visual: it sits
+// UNDER the blackout latch (the projector blanks it), so it is not safety state.
+// Nothing is playing at launch — clips must be triggered.
+let deck = loadDeck();
+let deckSaveTimer;
+
+function deckFile() { return path.join(__dirname, "..", "firebird.deck.json"); }
+function loadDeck() {
+  try {
+    if (fs.existsSync(deckFile())) {
+      const d = clips.normalizeDeck(JSON.parse(fs.readFileSync(deckFile(), "utf8")), shaders.ids);
+      d.layers.forEach((l) => (l.active = -1));
+      return d;
+    }
+  } catch (error) { console.warn("[deck] ignoring invalid firebird.deck.json:", error.message); }
+  return clips.defaultDeck(shaders.ids);
+}
+function saveDeckSoon() {
+  clearTimeout(deckSaveTimer);
+  deckSaveTimer = setTimeout(() => {
+    try { fs.writeFileSync(deckFile(), JSON.stringify(clips.exportDeck(deck), null, 2)); }
+    catch (error) { console.error("[deck] save failed:", error.message); }
+  }, 400);
+}
+// `origin` "local" = the operator's own window already applied this op to its copy,
+// so we don't echo it back (that would fight a slider mid-drag). Anything else
+// (OSC, phone remote) is echoed so the operator grid stays truthful.
+function pushDeck(origin) {
+  projectorWindow?.webContents.send("show:deck", deck);
+  if (origin !== "local") controlWindow?.webContents.send("show:deck", deck);
+}
+function deckOp(op, origin) {
+  const trusted = origin === "local";
+  const withIds = op && op.op === "clip" ? { ...op, shaderIds: shaders.ids } : op;
+  if (clips.applyOp(deck, withIds, { trusted })) {
+    if (trusted && op.op !== "trigger" && op.op !== "column" && op.op !== "stop" && op.op !== "stopAll") saveDeckSoon();
+    pushDeck(origin);
+  }
+}
 
 function localAddress() {
   for (const entries of Object.values(os.networkInterfaces())) {
@@ -159,8 +244,7 @@ function pushOutputs() {
   lastBlaize = { channels: { ...out.blaizeChannels }, preset: out.blaizePreset ?? lastBlaize.preset };
   // Projector blanking is driven by state.blackout in projector.js via broadcast.
   sendLaser(out.laser);
-  // DMX/Art-Net for conventional fixtures (out.master) attaches here in the
-  // hardware build. Until then it is modeled but not energized.
+  dmxTick(); // conventional fixtures: a blackout is an all-zero frame right now, not at the next tick
 }
 
 // ---------------------------------------------------------------------------
@@ -176,7 +260,9 @@ function sendLaser(laser) {
   // external DAC / laser software (Showeditor / Beyond) via the bridge — Firebird
   // stays the arm + blackout master while that software renders the frames.
   const dacActive = (laser.output === "ilda" || laser.output === "shownet") && laser.emit;
-  sendArtNetLaser(laser.output === "dmx" && laser.emit, laser.fx);
+  // When the DMX output is on, the laser's DMX bytes ride in the merged frame (dmx.js);
+  // otherwise use the standalone Art-Net path.
+  if (!dmxActive()) sendArtNetLaser(laser.output === "dmx" && laser.emit, laser.fx);
   sendDacBridge(dacActive, laser.fx);
 }
 
@@ -377,6 +463,16 @@ function handleAbletonOsc(message, remote) {
     dispatch({ action: "visual", key: osc.address.split("/").pop(), value, ...osrc });
   } else if (osc.address.startsWith("/firebird/depthfx/")) {
     dispatch({ action: "depthfx", key: osc.address.split("/").pop(), value, ...osrc });
+  } else if (osc.address === "/firebird/clip") {
+    // /firebird/clip <layer> <column>   (0-based) — trigger a clip from Ableton.
+    deckOp({ op: "trigger", layer: Math.round(Number(osc.values[0])), col: Math.round(Number(osc.values[1])) }, "osc");
+  } else if (osc.address === "/firebird/column") {
+    deckOp({ op: "column", col: Math.round(Number(value)) }, "osc");
+  } else if (osc.address === "/firebird/clip/stop") {
+    deckOp(osc.values.length ? { op: "stop", layer: Math.round(Number(value)) } : { op: "stopAll" }, "osc");
+  } else if (/^\/firebird\/layer\/\d+\/(opacity|bypass)$/.test(osc.address)) {
+    const [, , , n, key] = osc.address.split("/");
+    deckOp({ op: "layer", layer: Number(n), patch: { [key]: key === "bypass" ? Boolean(value) : Number(value) } }, "osc");
   } else if (osc.address === "/firebird/obs/stream") {
     handleObs({ op: Boolean(value) ? "startStream" : "stopStream" });
   } else if (osc.address === "/firebird/obs/record") {
@@ -487,6 +583,7 @@ function startControlServer() {
           // Remote surface is a control surface, not an operator console: it may
           // never arm the laser or reach fixtures directly.
           if (cmd.action === "laser") { response.writeHead(403); return response.end(); }
+          if (cmd.action === "deck") { deckOp(cmd.op, "remote"); response.writeHead(204); return response.end(); }
           dispatch({ ...cmd, source: "remote" });
         } catch {}
         response.writeHead(204);
@@ -575,6 +672,7 @@ function openProjector() {
   projectorWindow.webContents.on("did-finish-load", () => {
     projectorWindow.webContents.send("show:state", state);
     pushMapping();
+    projectorWindow.webContents.send("show:deck", deck);
   });
   projectorWindow.on("closed", () => (projectorWindow = null));
 }
@@ -614,6 +712,29 @@ ipcMain.on("mapping:set", (_, next) => {
   pushMapping();
 });
 ipcMain.handle("mapping:get", () => mapping);
+ipcMain.on("deck:op", (_, op) => deckOp(op, "local"));
+// DMX interface selection + patch helpers (local operator only; this is hardware setup).
+ipcMain.handle("dmx:get", async () => ({ status: dmxOut.status(), ports: await dmxOut.listPorts(), flashHz: dmx.MAX_FLASH_HZ }));
+ipcMain.handle("dmx:set", async (_, prefs) => {
+  const output = ["none", "enttec", "artnet"].includes(prefs && prefs.output) ? prefs.output : "none";
+  const port = String((prefs && prefs.port) || "").slice(0, 64);
+  saveDmxPrefs({ output, port });
+  dmxOut.configure(output, port);
+  return dmxOut.status();
+});
+ipcMain.on("dmx:identify", (_, id) => { identify = { id: String(id), until: Date.now() + 1500 }; });
+ipcMain.handle("deck:get", () => deck);
+// Audio features for the compositor: clamp to plain numbers and relay to the
+// projector only. High-rate and visual-only — never reaches the engine/outputs.
+ipcMain.on("deck:audio", (_, f) => {
+  if (!f || typeof f !== "object") return;
+  const n = (v) => Math.max(0, Math.min(1, Number(v) || 0));
+  audioTarget.level = n(f.level); audioTarget.bass = n(f.bass); audioTarget.mid = n(f.mid); audioTarget.high = n(f.high); audioTarget.at = Date.now();
+  projectorWindow?.webContents.send("show:audio", {
+    level: n(f.level), bass: n(f.bass), mid: n(f.mid), high: n(f.high), onset: !!f.onset,
+    bands: Array.isArray(f.bands) ? f.bands.slice(0, 16).map(n) : []
+  });
+});
 ipcMain.on("ar:quad", (_, quad) => {
   // Live body-tracking: drive every surface flagged track:true to the tracked
   // quad and push to the projector. Not saved to disk (it's per-frame).
@@ -664,6 +785,11 @@ app.whenReady().then(() => {
   startAbletonOsc();
   artnetSocket = dgram.createSocket("udp4");
   artnetSocket.on("error", (error) => console.error("[artnet] socket error:", error.message));
+  dmxOut.setArtnetSender((buf) => artnetSocket.send(buf, 6454, config.ARTNET_HOST, () => {}));
+  dmxOut.onChange((st) => { Object.assign(state.dmx, { output: st.output, port: st.port, connected: st.connected, error: st.error }); broadcast(); });
+  const prefs = loadDmxPrefs();
+  dmxOut.configure(prefs.output, prefs.port);
+  setInterval(dmxTick, Math.round(1000 / Math.max(10, Math.min(44, config.DMX_FPS || 30))));
   obs.setOnStatus((s) => controlWindow?.webContents.send("obs:status", s));
   if (config.OBS_AUTOCONNECT) obs.connect(config.OBS_URL, config.OBS_PASSWORD);
   // Ableton Link (optional native): when a peer changes tempo, follow it.
@@ -680,6 +806,14 @@ app.whenReady().then(() => {
     pushOutputs();
     if (state.clockSource === "internal" && state.playing) broadcast();
   }, 250);
+});
+
+let dmxStopped = false;
+app.on("before-quit", (event) => {
+  if (dmxStopped) return;
+  dmxStopped = true;
+  event.preventDefault();
+  dmxOut.stop(() => app.quit()); // final all-zero frame so the rig doesn't hold its last look
 });
 
 app.on("window-all-closed", () => {

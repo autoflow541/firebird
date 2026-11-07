@@ -67,6 +67,64 @@ safe state (including blackout) after any reconnect. Protocol reference:
 `vendor/Blaize_V3_PWFB/tcp_notes.txt`. Scene→preset: Intro 0, Heavy 10,
 Breakdown 20, Ambient 26.
 
+## Clip deck (built-in visuals)
+
+The **CLIPS** tab is a Resolume-style grid: layers (rows) x columns of clips,
+composited on the GPU (WebGL2) in the projector window. Click a clip to play and
+edit it; the column buttons (or keys **Q–I**) fire a whole column; each layer has
+opacity, blend mode (normal/add/screen/multiply/overlay/difference/lighten/darken),
+bypass and stop. A live preview runs the same compositor as the projector.
+
+- **Sources:** 10 built-in audio-reactive generators (plasma, tunnel, kaleidoscope,
+  rings, nebula, starfield, spectrum, neon grid, voronoi, aurora), solid colour,
+  image, video (local files), webcam. Per-clip speed, scale, hue, intensity and
+  audio-reactivity.
+- **Audio + clock:** the Sound tab's analysis (level, bass/mid/high, onsets, 16-band
+  spectrum) feeds every generator; beats lock to Ableton / BPM.
+- **Crossfades:** every layer has a FADE time. Triggering a clip, or stopping the
+  layer, dissolves from the old clip instead of cutting (smoothstep ease).
+- **Layer FX:** up to 4 effects per layer, in order: Color, Transform, Mirror /
+  kaleidoscope, Mosaic, RGB split, Blur, Trails (feedback) and Invert. Any effect's
+  first parameter can be modulated by level / bass / mid / high / beat, or an
+  Ableton-locked LFO / ramp / noise.
+- **GLSL clips (TouchDesigner-style):** set a clip's source to `glsl` and live-code
+  `vec3 fx(vec2 uv, vec2 p, float t)`. You get uTime, uBeat, uBass/uMid/uHigh/uLevel/
+  uOnset, uBands[16] and helpers (`pal`, `fbm`, `vnoise`, `band`, `beatPulse`,
+  `hueRot`). Compile errors show under the editor. Only the local operator can edit code.
+- **Mapping:** set a projection-map surface's source to **Clip deck** to corner-pin
+  the composite onto a real surface.
+- **Control:** OSC `/firebird/clip`, `/column`, `/layer/N/opacity` (see the Ableton
+  doc). OSC and the phone remote can trigger and fade clips but never edit them.
+- **Safety:** the deck sits under the blackout latch (blackout renders black and
+  pauses all media); nothing plays at launch; media must be local `file:` paths.
+
+The deck is saved per venue in `firebird.deck.json` (git-ignored).
+
+## Audience lights (DMX) + guitar rig
+
+FIXTURES tab -> **DMX OUTPUT**: **ENTTEC USB Pro** (auto-detects the COM port; install the
+FTDI VCP driver if Windows doesn't see it) or any **Art-Net** node. The choice is saved in
+`firebird.dmx.json`. Then patch each light:
+
+1. **Profile** (dimmer, RGB, RGBW, dimmer+RGB, ... or a custom channel map) and **DMX
+   address**. Typing an address patches the fixture. Fixtures start unpatched, so nothing
+   is written to DMX until you do this. **IDENTIFY** lights one white for 1.5 s.
+2. **Reacts to**: steady, sound level, bass, mids, highs, beat pulse, or **flash on beat**;
+   **depth** sets how far it moves from its level (level is the ceiling).
+3. Sound comes from the SOUND tab (guitar into your audio interface), the beat from Ableton
+   or the BPM.
+
+Safety: master blackout zeroes every channel immediately (including fixed channels and
+IDENTIFY); flash-to-beat is hard-limited to 3 flashes per second at any BPM (above 180 BPM
+it flashes every 2nd/3rd beat) and has its own off switch; remote/OSC can change a
+fixture's look but never its patch; on quit a final all-zero frame is sent. When the DMX
+output is on, the laser's DMX channels are merged into the same frame (still gated by arm,
+interlock and blackout).
+
+**Push 2:** in the MIDI tab tick *Push 2 pad grid -> clips* (bottom row = bottom layer,
+each pad = one clip column), and LEARN knobs/pads for lights reactivity depth, level,
+flash on/off, react-to-beat/sound/bass, fire column 1-8 and stop all clips.
+
 ## Ableton Live (the clock)
 
 Firebird listens for OSC on UDP **42070** (loopback by default) and sends status
@@ -90,6 +148,13 @@ src/
   renderer.js    operator console
   remote.js      phone remote (engage-only blackout, token from URL)
   projector.js   full-screen projector output
-test/engine.test.js   safety-model unit tests
+  dmx.js         DMX frame builder, beat/flash limiter, ENTTEC + Art-Net framing (pure)
+  dmxout.js      DMX transports (ENTTEC serial / Art-Net)
+  fixtures.js    FIXTURES tab UI
+  clips.js       clip-deck model + ops (pure, unit-tested)
+  shaders.js     generator library + blend/media/output GLSL
+  compositor.js  WebGL2 layer compositor (projector + preview)
+  deck.js        CLIPS tab UI
+test/            engine (safety), warp, soundmap, armap, clips unit tests
 vendor/Blaize_V3_PWFB  bundled Blaize Processing sketch + Max devices
 ```

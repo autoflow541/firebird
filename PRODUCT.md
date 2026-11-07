@@ -6,10 +6,16 @@
 > mapping, lasers, and stream from one place — and syncs/orchestrates the tools you
 > already use — for a solo performer, small band, DJ, or live streamer.
 
-The trap to avoid: trying to *out-feature* Resolume / MadMapper / Pangolin /
-grandMA individually. We don't win that. We win by being the **free, Ableton-
-clocked, phone-remote, safety-first conductor** that ties an act together and
-**interops** with the deep specialists.
+**Direction (updated):** Firebird is meant to become an all-in-one tool in the same
+league as **Resolume** (clip deck / VJ), **MadMapper** (mapping), **TouchDesigner**
+(real-time node engine) and **Synesthesia** (audio-reactive visuals) — while keeping
+the things none of them have: Ableton-as-clock, the latching blackout, the laser
+safety model, phone remote, and WCAG AA. This reverses the earlier "interop, don't
+out-feature" stance; interop (NDI/Spout) still ships because pros will mix tools.
+
+The honest scale of that: each of those products is years of work, so we go in
+layers. The foundation is the in-app GPU render core (compositor + clip deck);
+everything below builds on it.
 
 ## Competitive landscape
 | Job | Leaders | Firebird's stance |
@@ -41,7 +47,12 @@ clocked, phone-remote, safety-first conductor** that ties an act together and
 - **NDI in/out** — receive Resolume/TouchDesigner as a source; send Firebird's
   output to OBS. (Needs a native module — `grandiose`/NDI SDK; build step.)
 - **Spout/Syphon** — GPU texture sharing with MadMapper/Resolume. (Native.)
-- **Media/clip playback** — image/video sources (VJ table stakes).
+- ~~Media/clip playback~~ — **done:** CLIPS tab, WebGL2 compositor, image/video/webcam + 10 audio-reactive generators.
+- ~~Clip transitions + per-layer effects~~ - **done:** per-layer crossfade, 8-effect chain with audio/beat/LFO modulation, live GLSL clips.
+- **Clip thumbnails, MIDI + phone-remote clip grid, effect reordering/presets.**
+- **TouchDesigner direction, next:** multi-input operators (feedback across layers, texture-in-texture), parameter wiring between nodes, then a visual patcher over all of it.
+- **Mesh-warp + edge-blend + multi-output mapping** (MadMapper direction).
+- **Node graph over the shader/source system** (TouchDesigner-lite) — last, biggest.
 - **Visual cue-list editor** — edit cues in-UI (today: show-file JSON).
 
 ### Later

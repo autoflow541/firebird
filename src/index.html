@@ -60,6 +60,7 @@
     <div class="tabs">
       <nav class="tabstrip" id="tabstrip">
         <button data-tab="visuals" class="active">VISUALS</button>
+        <button data-tab="clips">CLIPS</button>
         <button data-tab="sound">SOUND</button>
         <button data-tab="ableton">ABLETON</button>
         <button data-tab="midi">MIDI</button>
@@ -81,6 +82,19 @@
       </div>
     </section>
 
+    <section class="panel deck-panel tabpanel" data-tab="clips">
+      <div class="panel-head"><div><span>CLIP DECK</span><b>Layers × columns · GPU compositor · keys Q–I fire columns</b></div><div class="deck-actions"><button id="deckStopAll" class="soft">■ STOP ALL</button><span id="deckGpu" class="bridge-status">GPU…</span></div></div>
+      <div class="deck-wrap">
+        <div class="deck-main"><div id="deckGrid" class="deck-grid"></div></div>
+        <aside class="deck-side">
+          <canvas id="deckPreview" width="320" height="180" aria-label="Live preview of the clip deck output"></canvas>
+          <div id="deckInspector" class="deck-inspector"></div>
+          <div id="deckFx" class="deck-inspector"></div>
+        </aside>
+      </div>
+      <p class="deck-note">Click a clip to play it and edit it. Output goes to the projector window (or any mapping surface set to “Clip deck”). Master blackout blanks the deck; nothing plays at launch.</p>
+    </section>
+
     <section class="panel ableton-engine tabpanel" data-tab="ableton">
       <div class="panel-head"><div><span>ABLETON LIVE</span><b>Show clock & cue automation</b></div><div id="abletonStatus" class="bridge-status">WAITING FOR OSC</div></div>
       <div class="ableton-grid">
@@ -94,13 +108,23 @@
 
     <section class="panel midi-panel tabpanel" data-tab="midi">
       <div class="panel-head"><div><span>MIDI</span><b>Map a controller (Push 2, pads, knobs)</b></div><div id="midiState" class="bridge-status">MIDI…</div></div>
+      <label class="chk midi-pads"><input type="checkbox" id="midiPads"> PUSH 2 PAD GRID → CLIPS <small>bottom row = bottom layer · each pad = one clip column</small></label>
       <div id="midiList" class="midi-list"></div>
       <div class="midi-foot"><button id="midiClear" class="soft">CLEAR ALL</button><small>Click LEARN, then press a pad/key/knob. Bindings are saved. Blackout can only be ENGAGED via MIDI; laser is never MIDI-mappable.</small></div>
     </section>
 
     <section class="panel fixtures tabpanel" data-tab="fixtures">
-      <div class="panel-head"><div><span>FIXTURES</span><b>Master live · fixture rows preview (Art-Net not wired)</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="arTrack" class="soft">AR TRACK ME</button><button id="arFilter" class="soft">AR FILTER 🎩</button><span id="arState" class="ar-state">AR OFF</span><button id="mapEditor" class="soft">PROJECTION MAP</button><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
-      <div class="fixture-grid" id="fixtureGrid"></div>
+      <div class="panel-head"><div><span>FIXTURES</span><b>Audience lights · DMX out · reacts to sound + beat</b></div><div class="fixture-actions"><label>MASTER <input id="master" type="range" min="0" max="100" value="82"></label><button id="arTrack" class="soft">AR TRACK ME</button><button id="arFilter" class="soft">AR FILTER 🎩</button><span id="arState" class="ar-state">AR OFF</span><button id="mapEditor" class="soft">PROJECTION MAP</button><button id="projector" class="soft">OPEN PROJECTOR ↗</button></div></div>
+      <div class="dmx-bar">
+        <label>DMX OUTPUT <select id="dmxOutput"><option value="none">OFF</option><option value="enttec">ENTTEC USB Pro</option><option value="artnet">Art-Net node</option></select></label>
+        <label id="dmxPortWrap" hidden>PORT <select id="dmxPort"><option value="">Auto-detect ENTTEC</option></select></label>
+        <button id="dmxRefresh" class="soft" aria-label="Rescan DMX ports">↻ RESCAN</button>
+        <span id="dmxStatus" class="bridge-status">DMX OFF</span>
+        <label class="chk"><input type="checkbox" id="dmxFlash" checked> FLASH TO BEAT (max 3 per second)</label>
+        <button id="fxAddFixture" class="soft">+ FIXTURE</button>
+      </div>
+      <div class="fixture-grid fx-list" id="fixtureGrid"></div>
+      <p class="deck-note">Fixtures start unpatched, so nothing is written to DMX until you give one an address and tick PATCHED. Master blackout zeroes every channel. Flash-to-beat is hard-limited to 3 flashes per second at any tempo.</p>
     </section>
 
     <section class="panel laser-panel tabpanel" data-tab="laser">
@@ -150,6 +174,12 @@
     </div>
   </main>
   <script src="soundmap.js"></script>
+  <script src="clips.js"></script>
+  <script src="shaders.js"></script>
+  <script src="compositor.js"></script>
+  <script src="deck.js"></script>
+  <script src="dmx.js"></script>
+  <script src="fixtures.js"></script>
   <script src="sound.js"></script>
   <script src="midi.js"></script>
   <script src="armap.js"></script>

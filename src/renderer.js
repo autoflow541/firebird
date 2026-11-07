@@ -9,6 +9,7 @@ const formatTime = (seconds) => {
 
 function render(next) {
   state = next;
+  window.state = next; // read by midi.js (flash toggle)
   document.querySelector("#sceneTitle").textContent = next.blackout ? "BLACKOUT" : next.scene;
   document.querySelector("#blackout").classList.toggle("active", next.blackout);
   document.querySelector("#play").textContent = next.playing ? "Ⅱ" : "▶";
@@ -39,12 +40,6 @@ function render(next) {
   document.querySelectorAll("[data-scene]").forEach((button) => button.classList.toggle("active", button.dataset.scene === next.scene));
   document.querySelectorAll("#beats i").forEach((beat, index) => beat.classList.toggle("on", index + 1 === next.beat && next.playing));
   document.querySelectorAll(".cue").forEach((cue, index) => cue.classList.toggle("current", index === next.cueIndex));
-  document.querySelector("#fixtureGrid").innerHTML = next.fixtures.map((fixture) => `
-    <div class="fixture-card ${fixture.locked ? "locked" : ""}">
-      <span class="swatch" style="color:${fixture.color};background:${fixture.color}"></span>
-      <div><b>${fixture.name}</b><small>${fixture.type} · ${fixture.level}%</small></div>
-      ${fixture.locked ? "" : `<input data-fixture="${fixture.id}" type="range" min="0" max="100" value="${fixture.level}">`}
-    </div>`).join("");
   renderLaser(next.laser);
 }
 
@@ -123,9 +118,6 @@ document.querySelector("#master").oninput = (event) => command("master", event.t
 document.querySelector("#visualPreset").oninput = (event) => window.showControl.command({ action: "visual", key: "preset", value: event.target.value });
 document.querySelectorAll("[data-visual]").forEach((input) => input.oninput = (event) => window.showControl.command({ action: "visual", key: event.target.dataset.visual, value: event.target.value }));
 document.querySelector("#multicolor").onclick = () => window.showControl.command({ action: "visual", key: "multicolor", value: !state.blaize.multicolor });
-document.querySelector("#fixtureGrid").oninput = (event) => {
-  if (event.target.dataset.fixture) command("fixture", { level: Number(event.target.value) }, { id: event.target.dataset.fixture });
-};
 document.querySelector("#timeline").onclick = (event) => command("seek", event.offsetX / event.currentTarget.clientWidth * 104);
 document.querySelector("#laserOutputSelect").addEventListener("change", (event) => {
   window.showControl.command({ action: "laser", key: "output", value: event.target.value });

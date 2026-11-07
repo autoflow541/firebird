@@ -39,6 +39,20 @@ starting device.
 | `/firebird/preset` | int 0–31 | Select Blaize preset |
 | `/firebird/visual/{speed,size,brightness,strobe,shading}` | float 0–100 | Visual params |
 
+Clip deck (layers are numbered from the bottom, 0-based; columns 0-based):
+
+| Address | Value | Result |
+| --- | --- | --- |
+| `/firebird/clip` | int layer, int column | Play the clip at that cell (empty cell ignored) |
+| `/firebird/column` | int column | Fire that column on every layer that has a clip there |
+| `/firebird/clip/stop` | int layer (omit = all) | Stop one layer, or every layer |
+| `/firebird/layer/N/opacity` | float 0–1 | Layer N opacity (automatable from a Live envelope) |
+| `/firebird/layer/N/bypass` | int 0/1 | Bypass layer N |
+
+OSC and the phone remote can only trigger existing clips and move opacity/bypass.
+Editing clips (which can point at files on disk) is local-operator only. The deck
+never overrides blackout.
+
 Legacy Blaize messages are still accepted: `/note`, `/speed`, `/size`,
 `/brightness`, `/strobing`, `/shading`.
 

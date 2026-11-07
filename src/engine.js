@@ -17,6 +17,8 @@
 //   * The laser can never be armed by software alone: arming also requires a
 //     hardware interlock signal (state.laser.interlock), which defaults false.
 
+const dmx = require("./dmx");
+
 const SCENES = ["INTRO", "HEAVY", "BREAKDOWN", "AMBIENT", "BLACKOUT"];
 
 // Scene -> Blaize preset. BLACKOUT intentionally has no preset (handled by gate).
@@ -73,11 +75,16 @@ function initialState() {
       // Applies only when armed; blackout (which disarms) forces it to 0.
       enabled: false, interlock: false, armed: false, output: "none", requireInterlock: true, fx: 0
     },
+    // DMX output for the audience lights (dmx.js). main.js owns the transport; this is
+    // just what the operator can see/set. flash = "flash to beat" allowed (rate-limited).
+    dmx: { output: "none", port: "", connected: false, error: "", flash: true },
+    // Fixtures ship UNPATCHED (enabled:false, addr 0) so a fresh install never writes
+    // DMX over another device's channels (e.g. the laser). The operator patches them.
     fixtures: [
-      { id: "washL", name: "Wash L", type: "RGBW", level: 76, color: "#ec325d" },
-      { id: "washR", name: "Wash R", type: "RGBW", level: 76, color: "#7357ff" },
-      { id: "beam", name: "Center Beam", type: "Moving head", level: 64, color: "#f1b947" },
-      { id: "laser", name: "Laser", type: "Safe hold", level: 0, color: "#54e19b", locked: true }
+      Object.assign(dmx.normalizeFixture({ id: "washL", name: "Wash L", profile: "rgb", level: 76, color: "#ec325d" }, 0), { type: "RGB" }),
+      Object.assign(dmx.normalizeFixture({ id: "washR", name: "Wash R", profile: "rgb", level: 76, color: "#7357ff" }, 1), { type: "RGB" }),
+      Object.assign(dmx.normalizeFixture({ id: "beam", name: "Center Beam", profile: "dimrgb", level: 64, color: "#f1b947" }, 2), { type: "Dimmer + RGB" }),
+      { id: "laser", name: "Laser", type: "Safe hold", level: 0, color: "#54e19b", locked: true, enabled: false, addr: 0, profile: "dimmer", map: "", react: "none", amt: 0 }
     ],
     cueIndex: 0,
     cues: [
@@ -185,7 +192,56 @@ function applyCommand(state, cmd, config) {
     }
     case "fixture": {
       const fixture = state.fixtures.find((item) => item.id === cmd.id);
-      if (fixture && !fixture.locked) Object.assign(fixture, cmd.value);
+      if (!fixture || fixture.locked || !cmd.value || typeof cmd.value !== "object") break;
+      const v = cmd.value;
+      // Anyone allowed to drive visuals may change a fixture's LOOK (level, colour, reactivity).
+      const look = dmx.normalizeFixture({ ...fixture, ...v, enabled: fixture.enabled, addr: fixture.addr, profile: fixture.profile, map: fixture.map, id: fixture.id }, 0);
+      if (v.level !== undefined) fixture.level = look.level;
+      if (v.color !== undefined) fixture.color = look.color;
+      if (v.react !== undefined) fixture.react = look.react;
+      if (v.amt !== undefined) fixture.amt = look.amt;
+      // The PATCH (address / profile / enabled / name) decides which DMX slots we write:
+      // local operator only.
+      if (source === "local") {
+        const patched = dmx.normalizeFixture({ ...fixture, ...v, id: fixture.id }, 0);
+        if (v.name !== undefined) fixture.name = patched.name;
+        if (v.profile !== undefined) { fixture.profile = patched.profile; fixture.type = patched.type; }
+        if (v.map !== undefined || v.profile !== undefined) fixture.map = patched.map;
+        if (v.addr !== undefined) fixture.addr = patched.addr;
+        if (v.enabled !== undefined || v.addr !== undefined) fixture.enabled = !!(v.enabled !== undefined ? v.enabled : fixture.enabled) && fixture.addr >= 1;
+      } else if (["name", "profile", "map", "addr", "enabled"].some((k) => v[k] !== undefined)) {
+        log.push(`blocked fixture patch change from '${source}' (local operator only)`);
+      }
+      break;
+    }
+    case "fixtureAdd": {
+      if (source !== "local") { log.push(`blocked fixtureAdd from '${source}'`); break; }
+      if (state.fixtures.length >= 32) break;
+      let n = state.fixtures.length + 1;
+      while (state.fixtures.some((f) => f.id === "fx" + n)) n++;
+      state.fixtures.push(dmx.normalizeFixture({ id: "fx" + n, name: "Fixture " + n, profile: "rgb" }, n - 1));
+      break;
+    }
+    case "fixtureRemove": {
+      if (source !== "local") { log.push(`blocked fixtureRemove from '${source}'`); break; }
+      const i = state.fixtures.findIndex((f) => f.id === cmd.id && !f.locked);
+      if (i >= 0) state.fixtures.splice(i, 1);
+      break;
+    }
+    case "lights": {
+      // Bulk look controls for the audience lights (Push 2 knobs / pads, phone remote):
+      //   key "amt"   0..100 -> reactivity depth on every enabled fixture
+      //   key "level" 0..100 -> level on every enabled fixture
+      //   key "react" <mode> -> reactivity source on every enabled fixture
+      //   key "flash" bool   -> allow flash-to-beat (still hard-limited to MAX_FLASH_HZ)
+      const val = Number(cmd.value);
+      for (const f of state.fixtures) {
+        if (f.locked || !f.enabled) continue;
+        if (cmd.key === "amt" && Number.isFinite(val)) f.amt = clamp(val / 100, 0, 1);
+        else if (cmd.key === "level" && Number.isFinite(val)) f.level = clamp(val, 0, 100);
+        else if (cmd.key === "react" && dmx.REACT_MODES.includes(String(cmd.value))) f.react = String(cmd.value);
+      }
+      if (cmd.key === "flash") state.dmx.flash = Boolean(cmd.value);
       break;
     }
     case "visual": {
@@ -339,10 +395,11 @@ function loadShow(state, show) {
       .sort((a, b) => a.time - b.time);
   }
   if (Array.isArray(show.fixtures)) {
-    state.fixtures = show.fixtures.map((f) => ({
-      id: String(f.id), name: String(f.name || f.id), type: String(f.type || ""),
-      level: clamp(Number(f.level) || 0, 0, 100), color: String(f.color || "#ffffff"), locked: !!f.locked
-    }));
+    state.fixtures = show.fixtures.map((f, i) => {
+      const n = dmx.normalizeFixture(f, i);
+      if (f && f.locked) n.locked = true;
+      return n;
+    });
   }
   state.cueIndex = 0;
   state.elapsed = 0;

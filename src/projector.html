@@ -8,15 +8,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-f
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Mapping layer: each surface is a warped element corner-pinned to a real surface. */
 #map{position:absolute;inset:0}
+/* Clip-deck compositor output, full-frame (shown only while a clip is playing and no mapping surfaces exist). */
+#deck{position:absolute;inset:0;width:100%;height:100%;display:none;background:#000}
+.surface canvas{width:100%;height:100%;display:block}
 .surface{position:absolute;top:0;left:0;transform-origin:0 0;overflow:hidden}
 .surface.scene{background:radial-gradient(circle at 50% 55%,#482033,#160c12 70%)}
 .surface.grid{background-image:linear-gradient(#0f8 1px,transparent 1px),linear-gradient(90deg,#0f8 1px,transparent 1px);background-size:40px 40px;background-color:#012}
 /* Blackout wins over everything. */
-.blackout #map,.blackout .stage{display:none!important}
+.blackout #map,.blackout .stage,.blackout #deck{display:none!important}
 body.blackout{background:#000}
 </style></head><body>
 <main class="stage" id="stage"><h1 id="title">FIREBIRD</h1><p>LIVE VISUAL OUTPUT</p></main>
+<canvas id="deck"></canvas>
 <div id="map"></div>
 <script src="warp.js"></script>
+<script src="clips.js"></script>
+<script src="shaders.js"></script>
+<script src="compositor.js"></script>
 <script src="projector.js"></script>
 </body></html>
